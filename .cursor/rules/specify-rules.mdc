@@ -5,6 +5,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-18
 ## Active Technologies
 - TypeScript 5.3+, Node.js 18+ (build stage only), nginx:alpine (serve stage) + Docker 20.10+, Docker Compose 2.0+, nginx 1.24+ (alpine) (003-dockerize-app)
 - Stateless container, no persistent volumes required (client-side localStorage) (003-dockerize-app)
+- CSS3, React 18 (JSX structure, CSS styling only) + None (pure CSS fix) (004-center-header)
+- N/A (visual layout fix only) (004-center-header)
 
 - TypeScript 5.3+ with React 18.2+ + React 18.2+, React Hooks (useState, useEffect, useRef), date-fns (time utilities) (001-pomodoro-timer)
 
@@ -25,6 +27,7 @@ npm test && npm run lint
 TypeScript 5.3+ with React 18.2+: Follow standard conventions
 
 ## Recent Changes
+- 004-center-header: Added CSS3, React 18 (JSX structure, CSS styling only) + None (pure CSS fix)
 - 003-dockerize-app: Added TypeScript 5.3+, Node.js 18+ (build stage only), nginx:alpine (serve stage) + Docker 20.10+, Docker Compose 2.0+, nginx 1.24+ (alpine)
 
 - 001-pomodoro-timer: Added TypeScript 5.3+ with React 18.2+ + React 18.2+, React Hooks (useState, useEffect, useRef), date-fns (time utilities)
