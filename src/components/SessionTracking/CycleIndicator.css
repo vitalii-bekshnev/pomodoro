@@ -1,0 +1,47 @@
+.cycle-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.cycle-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.cycle-dots {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.cycle-dot {
+  font-size: 24px;
+  line-height: 1;
+  transition: transform var(--transition-fast);
+}
+
+.cycle-dot.filled {
+  transform: scale(1.1);
+}
+
+.cycle-progress {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .cycle-dot {
+    font-size: 20px;
+  }
+}
+

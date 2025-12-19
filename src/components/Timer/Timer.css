@@ -1,0 +1,49 @@
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.timer-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.timer-mode-label {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  text-align: center;
+  margin: 0;
+  transition: color var(--transition-base);
+}
+
+.timer-visual {
+  margin-bottom: var(--spacing-xl);
+}
+
+.progress-ring-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-display-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 640px) {
+  .timer-container {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  
+  .timer-mode-label {
+    font-size: var(--font-size-xl);
+  }
+}
+

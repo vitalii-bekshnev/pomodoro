@@ -5,8 +5,7 @@
  * Defines the public API and return types for each hook.
  */
 
-import { TimerSession, TimerMode, TimerStatus } from '../types/timer';
-import { DailyProgress } from '../types/session';
+import { TimerMode, TimerStatus } from '../types/timer';
 import { UserPreferences } from '../types/settings';
 
 // ============================================================================

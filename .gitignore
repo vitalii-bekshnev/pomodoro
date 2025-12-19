@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+*.log
+
+# Production
+/dist
+/build
+
+# Misc
+.DS_Store
+.env*
+!.env.example
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temp
+*.tmp
+.cache/
+.temp/
+

@@ -1,0 +1,85 @@
+.notification-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--color-surface);
+  border-bottom: 3px solid var(--color-success);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-md);
+  transform: translateY(-100%);
+  transition: transform var(--transition-base);
+  z-index: 1000;
+}
+
+.notification-banner.visible {
+  transform: translateY(0);
+}
+
+.banner-content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.banner-message {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.banner-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.banner-button {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.banner-button.primary {
+  background-color: var(--color-success);
+  color: white;
+  border: 2px solid var(--color-success);
+}
+
+.banner-button.primary:hover {
+  background-color: #229954;
+  border-color: #229954;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.banner-button.secondary {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 2px solid var(--color-border);
+}
+
+.banner-button.secondary:hover {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .banner-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .banner-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

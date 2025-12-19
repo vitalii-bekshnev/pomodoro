@@ -1,0 +1,16 @@
+.timer-display {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  text-align: center;
+  user-select: none;
+  transition: color var(--transition-base);
+}
+
+@media (min-width: 768px) {
+  .timer-display {
+    font-size: 72px;
+  }
+}
+
