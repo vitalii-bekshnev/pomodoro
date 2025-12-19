@@ -62,10 +62,9 @@ export function useTimer(
   }
 
   // Persist session to localStorage whenever it changes
+  // Save ALL states including running (with startedAt timestamp for restore calculation)
   useEffect(() => {
-    if (session.status === 'paused' || session.status === 'idle') {
-      setStorageItem(STORAGE_KEYS.TIMER_STATE, session);
-    }
+    setStorageItem(STORAGE_KEYS.TIMER_STATE, session);
   }, [session]);
 
   // Cleanup interval on unmount
