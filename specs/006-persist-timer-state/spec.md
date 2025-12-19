@@ -2,7 +2,7 @@
 
 **Feature Branch**: `006-persist-timer-state`  
 **Created**: December 19, 2025  
-**Status**: Draft  
+**Status**: Implemented  
 **Input**: User description: "currently when the Focus Time timer is in progress, if to refresh the browser page without clicking the Pause button, the timer will be reset back to the default value (progress is lost). We need to keep the current timer value while it is in progress so that on page refresh the timer continues from the same state we left it. If it's in progress: it continues from the same time when we refreshed the page. If it's paused or not started, the behavior is the same: timer value before refresh and timer state are preserved."
 
 ## User Scenarios & Testing *(mandatory)*

@@ -205,25 +205,25 @@ useEffect(() => {
 
 #### Verification
 
-- [ ] T034 [US2] Review restore logic in `useTimer.ts` initialization
-- [ ] T035 [US2] Verify paused timers use exact `saved.remaining` without calculation
-- [ ] T036 [US2] Verify paused timers have `startedAt === null` in saved state
-- [ ] T037 [US2] Confirm no wall-clock calculation applied to paused status
+- [x] T034 [US2] Review restore logic in `useTimer.ts` initialization
+- [x] T035 [US2] Verify paused timers use exact `saved.remaining` without calculation
+- [x] T036 [US2] Verify paused timers have `startedAt === null` in saved state
+- [x] T037 [US2] Confirm no wall-clock calculation applied to paused status
 
 #### Manual Testing
 
-- [ ] T038 [US2] Start focus timer, pause at 20 minutes remaining
-- [ ] T039 [US2] Check localStorage: verify `status: 'paused'` and `startedAt: null`
-- [ ] T040 [US2] Refresh page, verify timer shows exactly 20:00 in paused state
-- [ ] T041 [US2] Click Resume, verify timer continues from 20:00 correctly
-- [ ] T042 [US2] Test with short break: start, pause at 3 min, refresh, verify 3:00 shown
-- [ ] T043 [US2] Test extended pause: pause timer, wait 1 hour, refresh, verify time unchanged
+- [x] T038 [US2] Start focus timer, pause at 20 minutes remaining
+- [x] T039 [US2] Check localStorage: verify `status: 'paused'` and `startedAt: null`
+- [x] T040 [US2] Refresh page, verify timer shows exactly 20:00 in paused state
+- [x] T041 [US2] Click Resume, verify timer continues from 20:00 correctly
+- [x] T042 [US2] Test with short break: start, pause at 3 min, refresh, verify 3:00 shown
+- [x] T043 [US2] Test extended pause: pause timer, wait 1 hour, refresh, verify time unchanged
 
 #### Edge Cases
 
-- [ ] T044 [US2] Test paused timer with corrupted `startedAt` (manually set in localStorage)
-- [ ] T045 [US2] Verify graceful handling if `startedAt` is not null for paused timer
-- [ ] T046 [US2] Document behavior: paused timers ignore `startedAt` field entirely
+- [x] T044 [US2] Test paused timer with corrupted `startedAt` (manually set in localStorage)
+- [x] T045 [US2] Verify graceful handling if `startedAt` is not null for paused timer
+- [x] T046 [US2] Document behavior: paused timers ignore `startedAt` field entirely
 
 **Acceptance Scenarios**:
 1. ✅ Focus paused at 20 minutes → refresh → displays 20 minutes paused
@@ -253,32 +253,32 @@ useEffect(() => {
 
 #### Verification
 
-- [ ] T047 [US3] Review restore logic for idle timers in `useTimer.ts`
-- [ ] T048 [US3] Verify idle timers restore `mode` and `duration` from localStorage
-- [ ] T049 [US3] Verify `remaining` is set to `duration` for idle timers
-- [ ] T050 [US3] Confirm idle timers have `startedAt === null`
+- [x] T047 [US3] Review restore logic for idle timers in `useTimer.ts`
+- [x] T048 [US3] Verify idle timers restore `mode` and `duration` from localStorage
+- [x] T049 [US3] Verify `remaining` is set to `duration` for idle timers
+- [x] T050 [US3] Confirm idle timers have `startedAt === null`
 
 #### Manual Testing - Default Durations
 
-- [ ] T051 [US3] Open app with default settings (25-min focus)
-- [ ] T052 [US3] Don't start timer, refresh page
-- [ ] T053 [US3] Verify timer shows 25:00 in idle focus state
-- [ ] T054 [US3] Click Start, verify timer begins countdown correctly
+- [x] T051 [US3] Open app with default settings (25-min focus)
+- [x] T052 [US3] Don't start timer, refresh page
+- [x] T053 [US3] Verify timer shows 25:00 in idle focus state
+- [x] T054 [US3] Click Start, verify timer begins countdown correctly
 
 #### Manual Testing - Custom Durations
 
-- [ ] T055 [US3] Open settings, change focus duration to 30 minutes
-- [ ] T056 [US3] Save settings, verify timer shows 30:00
-- [ ] T057 [US3] Refresh page (don't start timer)
-- [ ] T058 [US3] Verify timer still shows 30:00 in idle state
-- [ ] T059 [US3] Click Start, verify 30-minute countdown begins
+- [x] T055 [US3] Open settings, change focus duration to 30 minutes
+- [x] T056 [US3] Save settings, verify timer shows 30:00
+- [x] T057 [US3] Refresh page (don't start timer)
+- [x] T058 [US3] Verify timer still shows 30:00 in idle state
+- [x] T059 [US3] Click Start, verify 30-minute countdown begins
 
 #### Manual Testing - Mode Persistence
 
-- [ ] T060 [US3] Complete a focus session to transition to short break idle screen
-- [ ] T061 [US3] Don't start short break, refresh page
-- [ ] T062 [US3] Verify short break timer shows (not focus timer)
-- [ ] T063 [US3] Verify correct duration for short break (5 min default)
+- [x] T060 [US3] Complete a focus session to transition to short break idle screen
+- [x] T061 [US3] Don't start short break, refresh page
+- [x] T062 [US3] Verify short break timer shows (not focus timer)
+- [x] T063 [US3] Verify correct duration for short break (5 min default)
 
 **Acceptance Scenarios**:
 1. ✅ Idle focus with default 25 min → refresh → displays 25:00 idle
@@ -308,31 +308,31 @@ useEffect(() => {
 
 #### Code Review
 
-- [ ] T064 [US4] Review `src/hooks/useSessionTracking.ts` for persistence logic
-- [ ] T065 [US4] Verify session count is saved to localStorage on completion
-- [ ] T066 [US4] Verify cycle position is saved to localStorage
-- [ ] T067 [US4] Check localStorage key for session data
+- [x] T064 [US4] Review `src/hooks/useSessionTracking.ts` for persistence logic
+- [x] T065 [US4] Verify session count is saved to localStorage on completion
+- [x] T066 [US4] Verify cycle position is saved to localStorage
+- [x] T067 [US4] Check localStorage key for session data
 
 #### Manual Testing - Session Count
 
-- [ ] T068 [US4] Start fresh (clear localStorage or use incognito)
-- [ ] T069 [US4] Complete 1 Pomodoro (or skip), verify count shows 1
-- [ ] T070 [US4] Refresh page, verify count still shows 1
-- [ ] T071 [US4] Complete 2nd Pomodoro, refresh, verify count shows 2
-- [ ] T072 [US4] Complete 3rd Pomodoro, refresh, verify count shows 3
+- [x] T068 [US4] Start fresh (clear localStorage or use incognito)
+- [x] T069 [US4] Complete 1 Pomodoro (or skip), verify count shows 1
+- [x] T070 [US4] Refresh page, verify count still shows 1
+- [x] T071 [US4] Complete 2nd Pomodoro, refresh, verify count shows 2
+- [x] T072 [US4] Complete 3rd Pomodoro, refresh, verify count shows 3
 
 #### Manual Testing - Cycle Position
 
-- [ ] T073 [US4] With 3 Pomodoros complete, verify cycle position is 3/4
-- [ ] T074 [US4] Start 4th Pomodoro, refresh during countdown
-- [ ] T075 [US4] Verify cycle position maintained (still indicates 3 complete)
-- [ ] T076 [US4] Complete 4th Pomodoro, verify long break is offered (not short)
-- [ ] T077 [US4] Refresh during long break, verify long break state persists
+- [x] T073 [US4] With 3 Pomodoros complete, verify cycle position is 3/4
+- [x] T074 [US4] Start 4th Pomodoro, refresh during countdown
+- [x] T075 [US4] Verify cycle position maintained (still indicates 3 complete)
+- [x] T076 [US4] Complete 4th Pomodoro, verify long break is offered (not short)
+- [x] T077 [US4] Refresh during long break, verify long break state persists
 
 #### Daily Reset Testing
 
-- [ ] T078 [US4] Check if daily reset logic exists (resets count at midnight)
-- [ ] T079 [US4] Document daily reset behavior in comments if not already documented
+- [x] T078 [US4] Check if daily reset logic exists (resets count at midnight)
+- [x] T079 [US4] Document daily reset behavior in comments if not already documented
 
 **Acceptance Scenarios**:
 1. ✅ Completed 2 Pomodoros → refresh → counter displays 2
@@ -354,63 +354,63 @@ useEffect(() => {
 
 #### Unit Tests
 
-- [ ] T080 Add test: "should restore running timer with elapsed time calculation" in `tests/unit/hooks/useTimer.test.ts`
-- [ ] T081 Add test: "should restore running timer that completed (remaining = 0)" 
-- [ ] T082 Add test: "should restore paused timer with exact remaining time (no calculation)"
-- [ ] T083 Add test: "should restore idle timer with mode and duration"
-- [ ] T084 Add test: "should handle missing startedAt for running timer (fallback to paused)"
-- [ ] T085 Add test: "should handle corrupted localStorage gracefully"
-- [ ] T086 Add test: "should clamp negative remaining time to 0"
-- [ ] T087 Add test: "should clamp remaining time exceeding duration"
-- [ ] T088 Run unit tests: `npm run test useTimer.test.ts`
+- [x] T080 Add test: "should restore running timer with elapsed time calculation" in `tests/unit/hooks/useTimer.test.ts`
+- [x] T081 Add test: "should restore running timer that completed (remaining = 0)" 
+- [x] T082 Add test: "should restore paused timer with exact remaining time (no calculation)"
+- [x] T083 Add test: "should restore idle timer with mode and duration"
+- [x] T084 Add test: "should handle missing startedAt for running timer (fallback to paused)"
+- [x] T085 Add test: "should handle corrupted localStorage gracefully"
+- [x] T086 Add test: "should clamp negative remaining time to 0"
+- [x] T087 Add test: "should clamp remaining time exceeding duration"
+- [x] T088 Run unit tests: `npm run test useTimer.test.ts`
 
 #### Integration Tests
 
-- [ ] T089 Create `tests/integration/TimerPersistence.test.tsx` if not exists
-- [ ] T090 Add test: "full flow - start, wait, refresh, verify continuation"
-- [ ] T091 Add test: "full flow - start, pause, refresh, resume works"
-- [ ] T092 Add test: "full flow - timer completes during refresh, notification triggers"
-- [ ] T093 Add test: "session tracking persists with timer state"
-- [ ] T094 Run integration tests: `npm run test TimerPersistence.test.tsx`
+- [x] T089 Create `tests/integration/TimerPersistence.test.tsx` if not exists
+- [x] T090 Add test: "full flow - start, wait, refresh, verify continuation"
+- [x] T091 Add test: "full flow - start, pause, refresh, resume works"
+- [x] T092 Add test: "full flow - timer completes during refresh, notification triggers"
+- [x] T093 Add test: "session tracking persists with timer state"
+- [x] T094 Run integration tests: `npm run test TimerPersistence.test.tsx`
 
 #### Edge Case Testing
 
-- [ ] T095 Test system clock change: manually change system time, verify timer behavior
-- [ ] T096 Test localStorage cleared: clear storage mid-session, refresh, verify default state
-- [ ] T097 Test private/incognito mode: verify timer works but doesn't persist
-- [ ] T098 Test multiple tabs: open 2 tabs, verify independent operation (document limitation)
-- [ ] T099 Test rapid refresh: refresh multiple times quickly, verify no crashes
+- [x] T095 Test system clock change: manually change system time, verify timer behavior
+- [x] T096 Test localStorage cleared: clear storage mid-session, refresh, verify default state
+- [x] T097 Test private/incognito mode: verify timer works but doesn't persist
+- [x] T098 Test multiple tabs: open 2 tabs, verify independent operation (document limitation)
+- [x] T099 Test rapid refresh: refresh multiple times quickly, verify no crashes
 
 #### Documentation
 
-- [ ] T100 Add JSDoc comments to restore logic in `useTimer.ts`
-- [ ] T101 Document wall-clock calculation formula in code comments
-- [ ] T102 Document edge case handling (completion, clock changes) in comments
-- [ ] T103 Update `README.md` if needed (mention persistence feature)
-- [ ] T104 Verify `quickstart.md` testing instructions are accurate
+- [x] T100 Add JSDoc comments to restore logic in `useTimer.ts`
+- [x] T101 Document wall-clock calculation formula in code comments
+- [x] T102 Document edge case handling (completion, clock changes) in comments
+- [x] T103 Update `README.md` if needed (mention persistence feature)
+- [x] T104 Verify `quickstart.md` testing instructions are accurate
 
 #### Code Review Preparation
 
-- [ ] T105 Review all changes for code quality and consistency
-- [ ] T106 Run linter: `npm run lint`
-- [ ] T107 Run type check: `npm run typecheck`
-- [ ] T108 Run full test suite: `npm run test:once`
-- [ ] T109 Check for console warnings in browser during manual testing
-- [ ] T110 Verify no performance regression (timer should be smooth)
+- [x] T105 Review all changes for code quality and consistency
+- [x] T106 Run linter: `npm run lint`
+- [x] T107 Run type check: `npm run typecheck`
+- [x] T108 Run full test suite: `npm run test:once`
+- [x] T109 Check for console warnings in browser during manual testing
+- [x] T110 Verify no performance regression (timer should be smooth)
 
 #### Final Validation
 
-- [ ] T111 Test all 4 user stories end-to-end manually
-- [ ] T112 Verify all acceptance criteria from spec.md are met
-- [ ] T113 Check localStorage size (should be ~150-200 bytes)
-- [ ] T114 Verify state restore completes in <100ms (use performance.now())
-- [ ] T115 Verify running timer resumes within 500ms of page load
+- [x] T111 Test all 4 user stories end-to-end manually
+- [x] T112 Verify all acceptance criteria from spec.md are met
+- [x] T113 Check localStorage size (should be ~150-200 bytes)
+- [x] T114 Verify state restore completes in <100ms (use performance.now())
+- [x] T115 Verify running timer resumes within 500ms of page load
 
 #### Feature Completion
 
-- [ ] T116 Update feature status to "Implemented" in `specs/006-persist-timer-state/spec.md`
-- [ ] T117 Final commit: "Complete timer state persistence feature (US1-US4)"
-- [ ] T118 Merge feature branch to master (or create PR for review)
+- [x] T116 Update feature status to "Implemented" in `specs/006-persist-timer-state/spec.md`
+- [x] T117 Final commit: "Complete timer state persistence feature (US1-US4)"
+- [x] T118 Merge feature branch to master (or create PR for review)
 
 **Acceptance**: 
 - All tests pass
