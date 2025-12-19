@@ -32,32 +32,35 @@ This document provides a complete, dependency-ordered task breakdown for fixing 
 
 ### Task 1.1: Inspect Current CSS Layout
 
-- [ ] T001 Inspect current `.header-content` styles in src/components/App.css
+- [X] T001 Inspect current `.header-content` styles in src/components/App.css
 - **Description**: Review lines 26-34 to understand flexbox layout
 - **Acceptance**: 
   - Confirm `display: flex` with `justify-content: center`
   - Identify `position: relative` presence (or absence)
   - Document current layout behavior
-- **Status**: ⬜ Pending
+- **Status**: ✅ Complete
+- **Notes**: Confirmed `position: relative` present on line 31, flexbox centering in place
 
 ### Task 1.2: Inspect Title Container Styles
 
-- [ ] T002 Inspect `.header-content > div` styles in src/components/App.css
+- [X] T002 Inspect `.header-content > div` styles in src/components/App.css
 - **Description**: Review lines 36-38 to identify `flex: 1` issue
 - **Acceptance**:
   - Confirm `flex: 1` is present (root cause)
   - Understand how it affects centering
-- **Status**: ⬜ Pending
+- **Status**: ✅ Complete
+- **Notes**: Confirmed `flex: 1` on line 37 - root cause of off-center layout
 
 ### Task 1.3: Inspect Settings Button Styles
 
-- [ ] T003 Inspect `.settings-button` styles in src/components/App.css
+- [X] T003 Inspect `.settings-button` styles in src/components/App.css
 - **Description**: Review lines 40-53 to understand button positioning
 - **Acceptance**:
   - Confirm button is currently in flexbox flow
   - Note button width (48px) and current positioning
   - Verify hover effects and transitions exist
-- **Status**: ⬜ Pending
+- **Status**: ✅ Complete
+- **Notes**: Button 48px wide, in flex flow, hover effects preserved
 
 ### Task 1.4: Visual Baseline Capture
 
@@ -81,7 +84,7 @@ This document provides a complete, dependency-ordered task breakdown for fixing 
 
 #### Task 2.1: Add Positioning Context to Header Container
 
-- [ ] T005 [US1] Add `position: relative` to `.header-content` in src/components/App.css (line ~26-34)
+- [X] T005 [US1] Add `position: relative` to `.header-content` in src/components/App.css (line ~26-34)
 - **Description**: Ensure `.header-content` has `position: relative` for absolute positioning context
 - **CSS Change**:
   ```css
@@ -98,11 +101,12 @@ This document provides a complete, dependency-ordered task breakdown for fixing 
 - **Acceptance**:
   - `position: relative` added or verified present
   - No visual change yet (preparation for next task)
-- **Status**: ⬜ Pending
+- **Status**: ✅ Complete
+- **Notes**: Already present on line 31
 
 #### Task 2.2: Remove Flex Growth from Title Container
 
-- [ ] T006 [US1] Remove `flex: 1` from `.header-content > div` in src/components/App.css (line ~36-38)
+- [X] T006 [US1] Remove `flex: 1` from `.header-content > div` in src/components/App.css (line ~36-38)
 - **Description**: Comment out or delete `flex: 1` to allow true centering
 - **CSS Change**:
   ```css
@@ -114,12 +118,13 @@ This document provides a complete, dependency-ordered task breakdown for fixing 
   - `flex: 1` removed or commented
   - Title container no longer grows to fill space
   - If rule becomes empty, selector can be deleted
-- **Status**: ⬜ Pending
+- **Status**: ✅ Complete
+- **Notes**: Commented out on line 37 with explanation
 - **Dependencies**: T005 (context established)
 
 #### Task 2.3: Apply Absolute Positioning to Settings Button
 
-- [ ] T007 [US1] Add `position: absolute` and `right: 0` to `.settings-button` in src/components/App.css (line ~40)
+- [X] T007 [US1] Add `position: absolute` and `right: 0` to `.settings-button` in src/components/App.css (line ~40)
 - **Description**: Remove settings button from flex flow to enable title centering
 - **CSS Change**:
   ```css
@@ -138,7 +143,8 @@ This document provides a complete, dependency-ordered task breakdown for fixing 
   - `right: 0` added to anchor button to right edge
   - All existing styles preserved (hover effects, transitions, etc.)
   - Button removed from flex flow
-- **Status**: ⬜ Pending
+- **Status**: ✅ Complete
+- **Notes**: Added lines 41-42, all hover effects preserved
 - **Dependencies**: T005, T006 (centering mechanism ready)
 
 ### Visual Verification Tasks

@@ -34,10 +34,12 @@
 }
 
 .header-content > div {
-  flex: 1;
+  /* flex: 1; */ /* Removed to allow true centering */
 }
 
-.settings-button {
+.header-content .settings-button {
+  position: absolute;
+  right: 0;
   font-size: var(--font-size-2xl);
   background: var(--color-surface);
   border: 2px solid var(--color-border);
@@ -52,7 +54,7 @@
   flex-shrink: 0;
 }
 
-.settings-button:hover {
+.header-content .settings-button:hover {
   background: var(--color-focus);
   border-color: var(--color-focus);
   transform: rotate(90deg) scale(1.1);
