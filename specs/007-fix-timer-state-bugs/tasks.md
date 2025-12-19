@@ -1,21 +1,25 @@
-# Implementation Tasks: Fix Timer 2-Second Jump Bug (US1)
+# Implementation Tasks: Fix Duplicate Session Count Bug (US2)
 
 **Feature**: `007-fix-timer-state-bugs`  
 **Branch**: `007-fix-timer-state-bugs`  
 **Status**: Ready for implementation  
-**Scope**: Bug 1 only - Fix timer 2-second jump on refresh
+**Scope**: Bug 2 only - Fix duplicate session count on refresh
 
 ---
 
 ## Overview
 
-This document contains tasks for fixing Bug 1 (P1): Timer jumps 2 seconds forward on page refresh (24:35 → 24:37).
+This document contains tasks for fixing Bug 2 (P1): After timer completes, refreshing page increments Pomodoro count by 2 each time.
 
-**Root Cause**: Timer restoration uses `saved.remaining - elapsedTime` which double-counts time already decremented during the last run.
+**Root Cause**: No completion tracking - `onComplete()` fires on every mount when timer status is 'completed', with no mechanism to detect if this completion was already processed.
 
-**Fix**: Change calculation to `saved.duration - elapsedFromStart` to use constant baseline.
+**Fix**: Add unique `sessionId` to `TimerSession`, create `CompletionRecord` interface to track completed sessions in localStorage, and check completion record before calling `onComplete()`.
 
-**Impact**: ~2 lines changed in `src/hooks/useTimer.ts`
+**Impact**: 
+- Type changes: `TimerSession` interface (+1 field)
+- New type: `CompletionRecord` interface
+- New storage key: `STORAGE_KEYS.LAST_COMPLETION`
+- Logic changes in `useTimer.ts`: session ID generation, completion tracking
 
 ---
 
@@ -27,7 +31,7 @@ This document contains tasks for fixing Bug 1 (P1): Timer jumps 2 seconds forwar
 
 - **TaskID**: Sequential (T001, T002...)
 - **[P]**: Parallelizable
-- **[Story]**: User story label ([US1])
+- **[Story]**: User story label ([US2])
 - **File path**: Exact file location
 
 ---
@@ -36,7 +40,7 @@ This document contains tasks for fixing Bug 1 (P1): Timer jumps 2 seconds forwar
 
 | User Story | Priority | Phase | Description |
 |------------|----------|-------|-------------|
-| US1 | P1 | Phase 2 | Fix 2-second time jump (accurate timer restoration) |
+| US2 | P1 | Phase 2 | Fix duplicate session count (completion tracking) |
 
 ---
 
@@ -45,288 +49,281 @@ This document contains tasks for fixing Bug 1 (P1): Timer jumps 2 seconds forwar
 ```
 Phase 1: Setup
     ↓
-Phase 2: US1 - Fix Time Calculation ← ONLY BUG TO FIX
+Phase 2: US2 - Add Completion Tracking ← ONLY BUG TO FIX
     ↓
 Phase 3: Verification & Testing
 ```
 
 ---
 
-## Phase 1: Setup and Prerequisites
+## Phase 1: Setup & Prerequisites
 
-**Goal**: Prepare development environment and understand current buggy implementation
+**Purpose**: Verify environment and review existing implementation
 
 **Duration**: ~5 minutes
 
-### Tasks
+- [ ] T001 Review current TimerSession interface in src/types/timer.ts
+- [ ] T002 Review current STORAGE_KEYS in src/constants/defaults.ts
+- [ ] T003 Review useTimer hook completion logic in src/hooks/useTimer.ts (lines 103-109)
+- [ ] T004 Review data-model.md for CompletionRecord interface definition
+- [ ] T005 Review research.md Bug 2 section for implementation pattern
 
-- [ ] T001 Verify on feature branch `007-fix-timer-state-bugs`
-- [ ] T002 Read current buggy implementation in `src/hooks/useTimer.ts` (lines 42-44)
-- [ ] T003 Understand the bug: `saved.remaining - elapsedTime` uses wrong baseline
-- [ ] T004 Review research.md for detailed bug analysis (Bug 1 section)
-- [ ] T005 Confirm dev server can run: `npm run dev`
-
-**Acceptance**: Environment ready, buggy code location identified, root cause understood
+**Checkpoint**: Understand current completion flow and localStorage structure
 
 ---
 
-## Phase 2: User Story 1 - Fix Time Calculation Bug (P1) 🎯
+## Phase 2: User Story 2 - Fix Duplicate Session Count (Priority: P1) 🎯
 
-**Goal**: Fix 2-second time jump by changing calculation to use duration as baseline
+**Goal**: Prevent duplicate session count increments on page refresh by tracking completed sessions with unique IDs
 
-**Duration**: ~15-20 minutes
+**Independent Test**: Complete 1 Pomodoro (count = 1) → Wait on notification screen → Refresh page 5 times → Count still shows 1
 
-**Priority**: P1 (Critical - affects all timer refreshes)
+### Step 2.1: Enhance Data Types
 
-**Independent Test**: Start timer at 24:35 → Refresh page → Timer shows 24:35 (±1s), not 24:37
+- [ ] T006 [P] [US2] Add sessionId field to TimerSession interface in src/types/timer.ts
+- [ ] T007 [P] [US2] Create CompletionRecord interface in src/types/timer.ts
+- [ ] T008 [US2] Add LAST_COMPLETION to STORAGE_KEYS in src/constants/defaults.ts
 
-### Tasks
+**Checkpoint**: Type changes complete, ready for logic implementation
 
-#### Core Fix
+### Step 2.2: Implement Session ID Generation
 
-- [ ] T006 [US1] Open `src/hooks/useTimer.ts` and locate line 43 (buggy calculation)
-- [ ] T007 [US1] Change line 43 from `const elapsedTime = Date.now() - saved.startedAt` to `const elapsedFromStart = Date.now() - saved.startedAt`
-- [ ] T008 [US1] Change line 44 from `const calculatedRemaining = saved.remaining - elapsedTime` to `const calculatedRemaining = saved.duration - elapsedFromStart`
-- [ ] T009 [US1] Add comment above calculation explaining the fix: "// Calculate from original duration (constant), not remaining (already decremented)"
-- [ ] T010 [US1] Save file and verify no TypeScript errors
+- [ ] T009 [US2] Generate unique sessionId when start() is called in src/hooks/useTimer.ts
+- [ ] T010 [US2] Include sessionId in TimerSession state initialization in src/hooks/useTimer.ts
+- [ ] T011 [US2] Ensure sessionId persists to localStorage with timer state in src/hooks/useTimer.ts
 
-#### Manual Testing
+**Checkpoint**: Every timer session now has unique identifier
 
-- [ ] T011 [US1] Start dev server if not running: `npm run dev`
-- [ ] T012 [US1] Open browser to http://localhost:5173
-- [ ] T013 [US1] Start focus timer and wait until shows 24:35 remaining
-- [ ] T014 [US1] Note exact time shown (e.g., 24:35)
-- [ ] T015 [US1] Refresh page (F5)
-- [ ] T016 [US1] Verify timer shows 24:35 (±1 second), NOT 24:37
-- [ ] T017 [US1] Test with short break timer: start, wait to 4:20, refresh, verify 4:20 (±1s)
-- [ ] T018 [US1] Test rapid refreshes: refresh 5 times quickly, verify no cumulative errors
-- [ ] T019 [US1] Test wall-clock accuracy: note time, wait 5 seconds, refresh, verify time decreased by ~5 seconds
+### Step 2.3: Implement Completion Tracking
 
-#### Browser Console Verification
+- [ ] T012 [US2] Load CompletionRecord from localStorage on hook initialization in src/hooks/useTimer.ts
+- [ ] T013 [US2] Check if current session.sessionId matches lastCompletion.sessionId in completion useEffect in src/hooks/useTimer.ts (lines 103-109)
+- [ ] T014 [US2] Skip onComplete() call if session already processed in src/hooks/useTimer.ts
+- [ ] T015 [US2] Save CompletionRecord to localStorage when onComplete() is called (first time only) in src/hooks/useTimer.ts
 
-- [ ] T020 [US1] Open browser console (F12)
-- [ ] T021 [US1] Check localStorage before refresh: `JSON.parse(localStorage.getItem('pomodoro_timer_state'))`
-- [ ] T022 [US1] Note values: `duration`, `remaining`, `startedAt`
-- [ ] T023 [US1] Calculate expected after refresh: `duration - (Date.now() - startedAt)`
-- [ ] T024 [US1] Refresh page
-- [ ] T025 [US1] Check localStorage after refresh, verify `remaining` matches expected (±1000ms)
+**Checkpoint**: Completion tracking prevents duplicate onComplete() calls
 
-#### Code Quality
+### Step 2.4: Handle Edge Cases
 
-- [ ] T026 [US1] Review the 2-line change for correctness
-- [ ] T027 [US1] Ensure variable name changed from `elapsedTime` to `elapsedFromStart` for clarity
-- [ ] T028 [US1] Verify comment added explaining why `duration` is used instead of `remaining`
-- [ ] T029 [US1] Run linter: `npm run lint` (fix any issues)
-- [ ] T030 [US1] Run type check: `npm run typecheck` (fix any issues)
+- [ ] T016 [US2] Handle missing sessionId on restored sessions (backwards compatibility) in src/hooks/useTimer.ts
+- [ ] T017 [US2] Handle missing LAST_COMPLETION record (first-time users) in src/hooks/useTimer.ts
+- [ ] T018 [US2] Ensure new timer sessions generate fresh sessionId (not reused) in src/hooks/useTimer.ts
 
-#### Commit Changes
+**Checkpoint**: Edge cases handled gracefully
 
-- [ ] T031 [US1] Stage changes: `git add src/hooks/useTimer.ts`
-- [ ] T032 [US1] Commit with descriptive message: "Fix Bug 1: Correct timer restoration calculation to prevent 2-second jump"
-- [ ] T033 [US1] Commit message body: Explain the bug (remaining vs duration) and the fix
+### Step 2.5: Verify Type Exports
 
-**Acceptance Scenarios**:
-1. ✅ Focus timer at 24:35 → refresh → shows 24:35 (±1s), not 24:37
-2. ✅ Short break at 4:20 → refresh → shows 4:20 (±1s)
-3. ✅ Timer running, wait 5s, refresh → time decreased by ~5s (wall-clock accurate)
-4. ✅ Rapid refreshes (5x) → no cumulative errors, each accurate
+- [ ] T019 [US2] Ensure CompletionRecord is exported from src/types/timer.ts
+- [ ] T020 [US2] Verify sessionId is exposed in useTimer return type (optional, for debugging)
 
-**Independent Test Result**: Timer restoration accurate within ±1 second, 2-second jump eliminated
+**Checkpoint**: Types properly exported and available
 
 ---
 
-## Phase 3: Verification & Documentation
+## Phase 3: Verification & Testing
 
-**Goal**: Verify fix works correctly and document the change
+**Purpose**: Validate Bug 2 fix with manual testing and regression checks
 
-**Duration**: ~10 minutes
+**Duration**: ~15 minutes
 
-### Tasks
+### Manual Testing
 
-#### Comprehensive Testing
+- [ ] T021 Test completion tracking: Start focus timer → Let it complete (count = 1) → Verify count = 1
+- [ ] T022 Test single refresh: After completion, refresh page once → Verify count still = 1 (not 2)
+- [ ] T023 Test multiple refreshes: Refresh page 5 times → Verify count still = 1 (not 3/5/7)
+- [ ] T024 Test new session: Start new focus timer → Complete it → Verify count = 2 (correctly incremented)
+- [ ] T025 Test session sequence: Complete 2 Pomodoros with refreshes between → Verify final count = 2 (not 4+)
 
-- [ ] T034 Test all 3 timer modes (focus, short break, long break) with refresh
-- [ ] T035 Test at different time points (beginning, middle, near end of timer)
-- [ ] T036 Test with rapid refreshes (10x in a row)
-- [ ] T037 Test with paused timer (should NOT use wall-clock calculation, still exact time)
-- [ ] T038 Test with idle timer (should restore to saved remaining)
+### Browser Console Verification
 
-#### Edge Case Verification
+- [ ] T026 Open browser console → Check localStorage for pomodoro_last_completion key
+- [ ] T027 Verify CompletionRecord structure: {sessionId, completedAt, mode}
+- [ ] T028 After completion, verify sessionId in timer state matches sessionId in last completion
+- [ ] T029 After refresh, check console for NO duplicate onComplete logs
 
-- [ ] T039 Test: Timer at 0:01, refresh, verify doesn't go negative
-- [ ] T040 Test: Timer just started (25:00), refresh, verify stays at ~25:00
-- [ ] T041 Test: Multiple timers in sequence with refreshes between
-- [ ] T042 Verify no regression in paused timer restoration (exact time preserved)
-- [ ] T043 Verify no regression in idle timer restoration
+### Edge Case Testing
 
-#### Documentation
+- [ ] T030 Test first-time user: Clear localStorage → Complete timer → Verify count = 1 and CompletionRecord saved
+- [ ] T031 Test missing sessionId: Manually remove sessionId from stored timer state → Refresh → Verify graceful handling
+- [ ] T032 Test completion + start break: Complete focus → Start break → Verify completion record preserved
+- [ ] T033 Test mode switching: Complete focus → Switch to short-break → Complete → Verify separate completion tracking
 
-- [ ] T044 Update `specs/007-fix-timer-state-bugs/spec.md` status for Bug 1 to "Fixed"
-- [ ] T045 Add note to research.md confirming fix applied
-- [ ] T046 Document before/after code comparison in commit message (if not already)
+### Regression Testing
 
-#### Final Validation
+- [ ] T034 Test timer accuracy: Start timer → Pause → Resume → Complete → Verify time accurate
+- [ ] T035 Test timer restoration: Start timer → Refresh during countdown → Verify time restored correctly (Bug 1 not reintroduced)
+- [ ] T036 Test skip functionality: Start timer → Skip → Verify onComplete called once only
+- [ ] T037 Test reset functionality: Start timer → Reset → Start again → Complete → Verify count incremented once
 
-- [ ] T047 Review git diff to confirm only 2-3 lines changed
-- [ ] T048 Ensure no unintended changes to other parts of useTimer.ts
-- [ ] T049 Verify localStorage structure unchanged (backwards compatible)
-- [ ] T050 Test in multiple browsers (Chrome, Firefox, Safari if available)
+### Acceptance Criteria Validation
 
-**Acceptance**: 
-- Bug 1 completely fixed
-- All test scenarios pass
-- No regressions in other timer functionality
-- Changes documented
+- [ ] T038 Verify SC-002: "0% of page refreshes cause duplicate session count increments" → Test 20 refreshes, count stays same
+- [ ] T039 Verify SC-004: "User Story 2 acceptance scenarios pass" → All 4 scenarios from spec.md validated
+- [ ] T040 Verify completion tracking persists across app restarts: Close tab → Reopen → Verify last completion record preserved
 
----
-
-## Task Summary
-
-| Phase | Description | Task Count | Duration | Status |
-|-------|-------------|------------|----------|--------|
-| 1 | Setup | 5 | ~5 min | ⏳ Pending |
-| 2 | US1: Fix Bug 1 | 28 | ~20 min | ⏳ Pending |
-| 3 | Verification | 17 | ~10 min | ⏳ Pending |
-| **Total** | **Bug 1 Fix** | **50** | **~35 min** | ⏳ Pending |
+**Checkpoint**: Bug 2 completely fixed and validated
 
 ---
 
-## Code Change Summary
+## Phase 4: Documentation & Cleanup
 
-**File**: `src/hooks/useTimer.ts`  
-**Lines**: 43-44 (2 lines changed, 1 comment added)
+**Purpose**: Update documentation and commit changes
 
-**Before (BUGGY)**:
+**Duration**: ~5 minutes
+
+- [ ] T041 Update spec.md status for User Story 2 to "Implemented"
+- [ ] T042 Mark Bug 2 tasks complete in tasks.md (this file)
+- [ ] T043 Verify no linter errors in modified files
+- [ ] T044 Verify TypeScript compilation succeeds
+- [ ] T045 Commit changes with message format: "007-fix-timer-state-bugs: Fix duplicate session count on refresh (Bug 2)"
+
+**Checkpoint**: Bug 2 implementation complete and documented
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **US2 Fix (Phase 2)**: Depends on Setup completion
+  - Step 2.1 (Types) must complete before Steps 2.2-2.5
+  - Steps 2.2-2.3 can proceed sequentially
+  - Step 2.4 (Edge Cases) depends on Step 2.3
+  - Step 2.5 (Exports) can run in parallel with Step 2.4
+- **Verification (Phase 3)**: Depends on Phase 2 completion
+  - Manual tests can run in parallel (different scenarios)
+  - Browser console checks can run in parallel with manual tests
+  - Edge case tests should run after manual tests
+  - Regression tests should run last
+- **Documentation (Phase 4)**: Depends on Phase 3 completion
+
+### Within Phase 2
+
+```
+T006, T007, T008 (Types) - Can run in parallel [P]
+    ↓
+T009, T010, T011 (Session ID) - Sequential (same file, same function)
+    ↓
+T012, T013, T014, T015 (Completion Tracking) - Sequential (same logic block)
+    ↓
+T016, T017, T018 (Edge Cases) - Sequential (builds on completion logic)
+    ↓
+T019, T020 (Exports) - Can run in parallel with edge cases [P]
+```
+
+### Parallel Opportunities
+
+**Phase 2, Step 2.1** (Different files):
+```bash
+Task T006: "Add sessionId field to TimerSession in src/types/timer.ts"
+Task T007: "Create CompletionRecord interface in src/types/timer.ts"
+Task T008: "Add LAST_COMPLETION to STORAGE_KEYS in src/constants/defaults.ts"
+```
+
+**Phase 3, Manual Testing** (Independent scenarios):
+```bash
+Task T021: "Test completion tracking"
+Task T022: "Test single refresh"
+Task T023: "Test multiple refreshes"
+# Can all run in parallel
+```
+
+---
+
+## Implementation Strategy
+
+### Core Fix (Must Complete)
+
+1. **Phase 1**: Setup & Prerequisites (~5 min)
+2. **Phase 2, Step 2.1**: Enhance Data Types (~3 min)
+3. **Phase 2, Steps 2.2-2.4**: Implement Completion Tracking (~15 min)
+4. **Phase 3**: Verification & Testing (~15 min)
+5. **Phase 4**: Documentation & Cleanup (~5 min)
+
+**Total Estimated Time**: ~45 minutes
+
+### Testing-First Approach (If Desired)
+
+While this is primarily a bug fix, you can validate the bug exists before fixing:
+
+1. **Phase 1**: Setup & Prerequisites
+2. **Phase 3, T021-T023**: Reproduce bug (count increments on each refresh)
+3. **Phase 2**: Implement fix
+4. **Phase 3, T021-T040**: Verify bug is fixed
+
+### Incremental Validation
+
+- After Step 2.1: Verify types compile without errors
+- After Step 2.2: Verify sessionId is generated and logged
+- After Step 2.3: Verify CompletionRecord is saved
+- After Step 2.4: Test edge cases one by one
+- After Phase 3: Full acceptance validation
+
+---
+
+## Key Implementation Details
+
+### Session ID Format
+
 ```typescript
-const elapsedTime = Date.now() - saved.startedAt;
-const calculatedRemaining = saved.remaining - elapsedTime;
+// Generate unique ID when timer starts
+const sessionId = `${Date.now()}-${mode}`;
+// Example: "1703012345678-focus"
 ```
 
-**After (FIXED)**:
+### Completion Tracking Pattern
+
 ```typescript
-// Calculate from original duration (constant), not remaining (already decremented)
-const elapsedFromStart = Date.now() - saved.startedAt;
-const calculatedRemaining = saved.duration - elapsedFromStart;
+// On mount/restore
+const lastCompletion = getStorageItem<CompletionRecord>(
+  STORAGE_KEYS.LAST_COMPLETION,
+  null
+);
+
+const isAlreadyProcessed = 
+  lastCompletion && 
+  lastCompletion.sessionId === session.sessionId;
+
+if (session.status === 'completed' && !isAlreadyProcessed) {
+  onComplete(session.mode);
+  setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
+    sessionId: session.sessionId,
+    completedAt: Date.now(),
+    mode: session.mode
+  });
+}
 ```
 
-**Impact**: Eliminates 2-second jump, restores ±1 second accuracy
+### Backwards Compatibility
 
----
-
-## Success Criteria Validation
-
-### User Story 1 - Accurate Timer Restoration
-
-| Scenario | Expected | Test Method | Status |
-|----------|----------|-------------|--------|
-| Timer at 24:35 → refresh | Shows 24:35 (±1s) not 24:37 | Manual test (T013-T016) | ⏳ |
-| Short break 4:20 → refresh | Shows 4:20 (±1s) | Manual test (T017) | ⏳ |
-| Wait 5s, refresh | Time decreased by ~5s | Manual test (T019) | ⏳ |
-| Rapid 5x refreshes | No cumulative errors | Manual test (T018) | ⏳ |
-
----
-
-## Testing Checklist
-
-### Manual Tests (Required)
-- [ ] Focus timer refresh at 24:35 (primary bug scenario)
-- [ ] Short break timer refresh at 4:20
-- [ ] Long break timer refresh at any time
-- [ ] Timer refresh after waiting 5 seconds
-- [ ] Rapid refreshes (5-10x in a row)
-- [ ] Timer at start (25:00) refresh
-- [ ] Timer near end (0:10) refresh
-- [ ] Paused timer refresh (should be exact, no wall-clock calc)
-- [ ] Idle timer refresh (should preserve time)
-
-### Browser Console Tests (Recommended)
-- [ ] Verify `duration` used in calculation (not `remaining`)
-- [ ] Verify localStorage `remaining` matches `duration - elapsed`
-- [ ] Verify no cumulative error after multiple refreshes
-
-### Regression Tests (Critical)
-- [ ] Paused timer still shows exact time (no calculation)
-- [ ] Idle timer still restores correctly
-- [ ] Timer controls still work (pause, resume, reset, skip)
-- [ ] Completion detection still works
-- [ ] Session tracking not affected
-
----
-
-## Debugging Quick Reference
-
-**If timer still jumps**:
-```javascript
-// In browser console
-const state = JSON.parse(localStorage.getItem('pomodoro_timer_state'));
-const elapsed = Date.now() - state.startedAt;
-const shouldBe = state.duration - elapsed;
-const actualIs = state.remaining;
-console.log('Expected:', Math.floor(shouldBe/1000), 'Actual:', Math.floor(actualIs/1000));
-// Should match within 1-2 seconds
+```typescript
+// Handle old sessions without sessionId
+if (!saved.sessionId) {
+  saved.sessionId = `${Date.now()}-${saved.mode}-migrated`;
+}
 ```
 
-**If calculation wrong**:
-- Check: Is `duration` being used (not `remaining`)?
-- Check: Is `elapsedFromStart` calculated from `startedAt`?
-- Check: Is result clamped to [0, duration]?
+---
+
+## Success Criteria (from spec.md)
+
+- ✅ **SC-002**: 0% of page refreshes cause duplicate session count increments
+- ✅ **SC-004**: User Story 2 acceptance scenarios pass (4 scenarios)
+- ✅ **SC-005**: Count remains accurate across 20+ refresh scenarios
 
 ---
 
-## Implementation Notes
+## Notes
 
-### Why This Fix Works
-
-**Problem**: 
-- `saved.remaining` was already decremented by the timer interval (every 100ms)
-- Subtracting `elapsedTime` again creates double-counting
-- Example: Timer started, ran 5min, remaining = 20min, elapsed = 5min
-  - Buggy: 20min - 5min = 15min (WRONG, should be 20min)
-  - Fixed: 25min - 5min = 20min (CORRECT)
-
-**Solution**:
-- Use `duration` (constant, never changes) as baseline
-- Subtract elapsed time from start
-- Simple, accurate, no cumulative errors
-
-**Performance**: No impact (same complexity, just different baseline)
-
-**Backwards Compatibility**: Yes (only changes calculation, not data structure)
+- **Complexity**: Medium - requires type changes, localStorage management, and edge case handling
+- **Risk**: Low - additive changes, backwards compatible
+- **Files Modified**: 3 files (types, constants, useTimer hook)
+- **Breaking Changes**: None - sessionId is optional with fallback
+- **Testing**: Primarily manual (refresh-based scenarios)
+- **Estimated LOC**: ~30-40 lines added/modified
 
 ---
 
-## Next Steps
-
-After Bug 1 is fixed and verified:
-
-1. **Test Bug 1 thoroughly** (all scenarios above)
-2. **Commit the fix** with clear message
-3. **Optional**: Fix remaining bugs (2, 3, 4) if needed
-4. **Optional**: Add automated tests for Bug 1
-5. **Merge** to master when confident
-
----
-
-**Status**: 📝 Task list complete, ready for implementation  
-**Focus**: Bug 1 only (2-second time jump)  
-**Estimated Time**: ~35 minutes  
-**Code Impact**: 2-3 lines in one file  
-**Risk**: Very low - simple calculation fix
-
----
-
-## Quick Start
-
-**To implement Bug 1 fix immediately**:
-
-1. Open `src/hooks/useTimer.ts`
-2. Go to lines 43-44
-3. Change:
-   - Line 43: `elapsedTime` → `elapsedFromStart`
-   - Line 44: `saved.remaining` → `saved.duration`
-4. Add comment: `// Calculate from original duration (constant), not remaining (already decremented)`
-5. Save, test with refresh, verify 24:35 stays 24:35
-6. Commit: "Fix Bug 1: Correct timer restoration calculation"
-
-**Done!** Bug 1 fixed in ~3 minutes of coding + ~20 minutes of testing.
+**Status**: Ready for implementation via `/speckit.implement bug 2`
 
