@@ -59,6 +59,13 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: dist/
+          retention-days: 90
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
