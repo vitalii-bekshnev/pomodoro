@@ -1,25 +1,25 @@
-# Implementation Tasks: Fix Duplicate Session Count Bug (US2)
+# Implementation Tasks: Fix Persistent Break Start Option (US3)
 
 **Feature**: `007-fix-timer-state-bugs`  
 **Branch**: `007-fix-timer-state-bugs`  
 **Status**: Ready for implementation  
-**Scope**: Bug 2 only - Fix duplicate session count on refresh
+**Scope**: Bug 3 only - Add persistent break start option
 
 ---
 
 ## Overview
 
-This document contains tasks for fixing Bug 2 (P1): After timer completes, refreshing page increments Pomodoro count by 2 each time.
+This document contains tasks for fixing Bug 3 (P2): After notification is dismissed, no UI element exists to start the break, leaving users stuck.
 
-**Root Cause**: No completion tracking - `onComplete()` fires on every mount when timer status is 'completed', with no mechanism to detect if this completion was already processed.
+**Root Cause**: Notification is transient (dismissible, timeout), but break start action is critical to Pomodoro flow. Once notification disappears, there's no way to start break.
 
-**Fix**: Add unique `sessionId` to `TimerSession`, create `CompletionRecord` interface to track completed sessions in localStorage, and check completion record before calling `onComplete()`.
+**Fix**: Add persistent UI element (button/banner) that shows when timer status is 'completed' and mode is 'focus', providing always-available break start option.
 
 **Impact**: 
-- Type changes: `TimerSession` interface (+1 field)
-- New type: `CompletionRecord` interface
-- New storage key: `STORAGE_KEYS.LAST_COMPLETION`
-- Logic changes in `useTimer.ts`: session ID generation, completion tracking
+- New UI component in App.tsx (persistent break actions)
+- CSS styling for break pending state
+- Logic to determine next break type (short vs long)
+- Integration with existing switchMode() and session tracking
 
 ---
 
@@ -31,7 +31,7 @@ This document contains tasks for fixing Bug 2 (P1): After timer completes, refre
 
 - **TaskID**: Sequential (T001, T002...)
 - **[P]**: Parallelizable
-- **[Story]**: User story label ([US2])
+- **[Story]**: User story label ([US3])
 - **File path**: Exact file location
 
 ---
@@ -40,7 +40,7 @@ This document contains tasks for fixing Bug 2 (P1): After timer completes, refre
 
 | User Story | Priority | Phase | Description |
 |------------|----------|-------|-------------|
-| US2 | P1 | Phase 2 | Fix duplicate session count (completion tracking) |
+| US3 | P2 | Phase 2 | Add persistent break start option (UI component) |
 
 ---
 
@@ -49,7 +49,7 @@ This document contains tasks for fixing Bug 2 (P1): After timer completes, refre
 ```
 Phase 1: Setup
     ↓
-Phase 2: US2 - Add Completion Tracking ← ONLY BUG TO FIX
+Phase 2: US3 - Add Persistent Break Start UI ← ONLY BUG TO FIX
     ↓
 Phase 3: Verification & Testing
 ```
@@ -58,110 +58,105 @@ Phase 3: Verification & Testing
 
 ## Phase 1: Setup & Prerequisites
 
-**Purpose**: Verify environment and review existing implementation
+**Purpose**: Review existing components and identify integration points
 
 **Duration**: ~5 minutes
 
-- [X] T001 Review current TimerSession interface in src/types/timer.ts
-- [X] T002 Review current STORAGE_KEYS in src/constants/defaults.ts
-- [X] T003 Review useTimer hook completion logic in src/hooks/useTimer.ts (lines 103-109)
-- [X] T004 Review data-model.md for CompletionRecord interface definition
-- [X] T005 Review research.md Bug 2 section for implementation pattern
+- [ ] T001 Review App.tsx component structure and timer state usage
+- [ ] T002 Review existing NotificationBanner component for UI patterns
+- [ ] T003 Review useSessionTracking hook to understand cycle position logic
+- [ ] T004 Review research.md Bug 3 section for UI design pattern
+- [ ] T005 Review App.css for existing styling patterns
 
-**Checkpoint**: ✅ Understand current completion flow and localStorage structure
+**Checkpoint**: Understand current UI structure and notification flow
 
 ---
 
-## Phase 2: User Story 2 - Fix Duplicate Session Count (Priority: P1) 🎯
+## Phase 2: User Story 3 - Add Persistent Break Start Option (Priority: P2) 🎯
 
-**Goal**: Prevent duplicate session count increments on page refresh by tracking completed sessions with unique IDs
+**Goal**: Provide persistent UI element to start break when timer completes, even after notification is dismissed
 
-**Independent Test**: Complete 1 Pomodoro (count = 1) → Wait on notification screen → Refresh page 5 times → Count still shows 1
+**Independent Test**: Complete focus session → Dismiss notification → Verify "Start Break" button visible → Click button → Break timer starts correctly
 
-### Step 2.1: Enhance Data Types
+### Step 2.1: Implement Helper Logic
 
-- [X] T006 [P] [US2] Add sessionId field to TimerSession interface in src/types/timer.ts
-- [X] T007 [P] [US2] Create CompletionRecord interface in src/types/timer.ts
-- [X] T008 [US2] Add LAST_COMPLETION to STORAGE_KEYS in src/constants/defaults.ts
+- [ ] T006 [P] [US3] Create helper function to determine next break type (short vs long) based on cycle position in src/components/App.tsx
+- [ ] T007 [P] [US3] Create handleStartBreak function to switch to appropriate break mode in src/components/App.tsx
 
-**Checkpoint**: ✅ Type changes complete, ready for logic implementation
+**Checkpoint**: Helper functions ready for UI integration
 
-### Step 2.2: Implement Session ID Generation
+### Step 2.2: Add Persistent UI Component
 
-- [X] T009 [US2] Generate unique sessionId when start() is called in src/hooks/useTimer.ts
-- [X] T010 [US2] Include sessionId in TimerSession state initialization in src/hooks/useTimer.ts
-- [X] T011 [US2] Ensure sessionId persists to localStorage with timer state in src/hooks/useTimer.ts
+- [ ] T008 [US3] Add conditional rendering for break-pending state (status='completed' && mode='focus') in src/components/App.tsx
+- [ ] T009 [US3] Add "Start Break" button with handleStartBreak click handler in src/components/App.tsx
+- [ ] T010 [US3] Add "Skip Break - Start Focus" button (placeholder for Bug 4) in src/components/App.tsx
+- [ ] T011 [US3] Add descriptive text explaining focus session is complete in src/components/App.tsx
 
-**Checkpoint**: ✅ Every timer session now has unique identifier
+**Checkpoint**: Persistent break actions UI added to App component
 
-### Step 2.3: Implement Completion Tracking
+### Step 2.3: Add CSS Styling
 
-- [X] T012 [US2] Load CompletionRecord from localStorage on hook initialization in src/hooks/useTimer.ts
-- [X] T013 [US2] Check if current session.sessionId matches lastCompletion.sessionId in completion useEffect in src/hooks/useTimer.ts (lines 103-109)
-- [X] T014 [US2] Skip onComplete() call if session already processed in src/hooks/useTimer.ts
-- [X] T015 [US2] Save CompletionRecord to localStorage when onComplete() is called (first time only) in src/hooks/useTimer.ts
+- [ ] T012 [P] [US3] Create .break-pending-actions class in src/components/App.css
+- [ ] T013 [P] [US3] Style buttons to match existing design system (warm, friendly aesthetic) in src/components/App.css
+- [ ] T014 [P] [US3] Add responsive layout for break pending actions in src/components/App.css
+- [ ] T015 [P] [US3] Add visual distinction for break pending state (border, background) in src/components/App.css
 
-**Checkpoint**: ✅ Completion tracking prevents duplicate onComplete() calls
+**Checkpoint**: Break pending UI styled consistently with app design
 
-### Step 2.4: Handle Edge Cases
+### Step 2.4: Integration & Edge Cases
 
-- [X] T016 [US2] Handle missing sessionId on restored sessions (backwards compatibility) in src/hooks/useTimer.ts
-- [X] T017 [US2] Handle missing LAST_COMPLETION record (first-time users) in src/hooks/useTimer.ts
-- [X] T018 [US2] Ensure new timer sessions generate fresh sessionId (not reused) in src/hooks/useTimer.ts
+- [ ] T016 [US3] Verify break start option persists across page refresh (status/mode restored from localStorage)
+- [ ] T017 [US3] Verify break start option disappears after break is started (status changes to 'running')
+- [ ] T018 [US3] Verify correct break type (short/long) based on cycle position
+- [ ] T019 [US3] Test interaction with existing notification system (both should work)
 
-**Checkpoint**: ✅ Edge cases handled gracefully
-
-### Step 2.5: Verify Type Exports
-
-- [X] T019 [US2] Ensure CompletionRecord is exported from src/types/timer.ts
-- [X] T020 [US2] Verify sessionId is exposed in useTimer return type (optional, for debugging)
-
-**Checkpoint**: ✅ Types properly exported and available
+**Checkpoint**: Break start UI integrates seamlessly with existing timer flow
 
 ---
 
 ## Phase 3: Verification & Testing
 
-**Purpose**: Validate Bug 2 fix with manual testing and regression checks
+**Purpose**: Validate Bug 3 fix with manual testing and acceptance criteria
 
-**Duration**: ~15 minutes
+**Duration**: ~10 minutes
 
 ### Manual Testing
 
-- [ ] T021 Test completion tracking: Start focus timer → Let it complete (count = 1) → Verify count = 1
-- [ ] T022 Test single refresh: After completion, refresh page once → Verify count still = 1 (not 2)
-- [ ] T023 Test multiple refreshes: Refresh page 5 times → Verify count still = 1 (not 3/5/7)
-- [ ] T024 Test new session: Start new focus timer → Complete it → Verify count = 2 (correctly incremented)
-- [ ] T025 Test session sequence: Complete 2 Pomodoros with refreshes between → Verify final count = 2 (not 4+)
+- [ ] T020 Test basic break start: Complete focus → Dismiss notification → Verify "Start Break" button visible
+- [ ] T021 Test button click: Click "Start Break" → Verify appropriate break timer starts
+- [ ] T022 Test notification timeout: Complete focus → Wait for notification auto-dismiss → Verify button still visible
+- [ ] T023 Test page refresh: Complete focus → Refresh page → Verify button persists and works
+- [ ] T024 Test short break: Complete 1st Pomodoro → Click "Start Break" → Verify short break (5 min) starts
+- [ ] T025 Test long break: Complete 4th Pomodoro → Click "Start Break" → Verify long break (15 min) starts
 
-### Browser Console Verification
+### UI/UX Verification
 
-- [ ] T026 Open browser console → Check localStorage for pomodoro_last_completion key
-- [ ] T027 Verify CompletionRecord structure: {sessionId, completedAt, mode}
-- [ ] T028 After completion, verify sessionId in timer state matches sessionId in last completion
-- [ ] T029 After refresh, check console for NO duplicate onComplete logs
+- [ ] T026 Verify button is prominent and discoverable (clear call-to-action)
+- [ ] T027 Verify text clearly explains state ("Focus session complete")
+- [ ] T028 Verify styling matches app design (warm colors, friendly tone)
+- [ ] T029 Verify button disappears after break starts (no lingering UI)
+- [ ] T030 Verify responsive layout on different screen sizes
 
 ### Edge Case Testing
 
-- [ ] T030 Test first-time user: Clear localStorage → Complete timer → Verify count = 1 and CompletionRecord saved
-- [ ] T031 Test missing sessionId: Manually remove sessionId from stored timer state → Refresh → Verify graceful handling
-- [ ] T032 Test completion + start break: Complete focus → Start break → Verify completion record preserved
-- [ ] T033 Test mode switching: Complete focus → Switch to short-break → Complete → Verify separate completion tracking
+- [ ] T031 Test with notification dismissed immediately: Dismiss notification instantly → Button should appear
+- [ ] T032 Test rapid completion: Complete timer → Immediately click "Start Break" → Should work without delay
+- [ ] T033 Test concurrent notification + button: Both notification and button should show, either can start break
+- [ ] T034 Test break complete → focus pending: Complete break timer → Verify no button (only for focus → break)
 
 ### Regression Testing
 
-- [ ] T034 Test timer accuracy: Start timer → Pause → Resume → Complete → Verify time accurate
-- [ ] T035 Test timer restoration: Start timer → Refresh during countdown → Verify time restored correctly (Bug 1 not reintroduced)
-- [ ] T036 Test skip functionality: Start timer → Skip → Verify onComplete called once only
-- [ ] T037 Test reset functionality: Start timer → Reset → Start again → Complete → Verify count incremented once
+- [ ] T035 Test existing notification still works: Complete focus → Click notification "Start Break" → Verify works
+- [ ] T036 Test timer accuracy preserved: Bug 1 fix not affected by new UI
+- [ ] T037 Test session tracking: Bug 2 fix not affected by new UI
+- [ ] T038 Test all timer controls: Pause, resume, reset, skip still work correctly
 
 ### Acceptance Criteria Validation
 
-- [ ] T038 Verify SC-002: "0% of page refreshes cause duplicate session count increments" → Test 20 refreshes, count stays same
-- [ ] T039 Verify SC-004: "User Story 2 acceptance scenarios pass" → All 4 scenarios from spec.md validated
-- [ ] T040 Verify completion tracking persists across app restarts: Close tab → Reopen → Verify last completion record preserved
+- [ ] T039 Verify SC-006: "User Story 3 acceptance scenarios pass" → All 4 scenarios from spec.md validated
+- [ ] T040 Verify break start persists across refreshes, dismissals, timeouts
 
-**Checkpoint**: Bug 2 completely fixed and validated
+**Checkpoint**: Bug 3 completely fixed and validated
 
 ---
 
@@ -171,13 +166,13 @@ Phase 3: Verification & Testing
 
 **Duration**: ~5 minutes
 
-- [ ] T041 Update spec.md status for User Story 2 to "Implemented"
-- [ ] T042 Mark Bug 2 tasks complete in tasks.md (this file)
+- [ ] T041 Update spec.md status for User Story 3 to "Implemented"
+- [ ] T042 Mark Bug 3 tasks complete in tasks.md (this file)
 - [ ] T043 Verify no linter errors in modified files
 - [ ] T044 Verify TypeScript compilation succeeds
-- [ ] T045 Commit changes with message format: "007-fix-timer-state-bugs: Fix duplicate session count on refresh (Bug 2)"
+- [ ] T045 Commit changes with message format: "007-fix-timer-state-bugs: Add persistent break start option (Bug 3)"
 
-**Checkpoint**: Bug 2 implementation complete and documented
+**Checkpoint**: Bug 3 implementation complete and documented
 
 ---
 
@@ -186,14 +181,14 @@ Phase 3: Verification & Testing
 ### Phase Dependencies
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
-- **US2 Fix (Phase 2)**: Depends on Setup completion
-  - Step 2.1 (Types) must complete before Steps 2.2-2.5
-  - Steps 2.2-2.3 can proceed sequentially
-  - Step 2.4 (Edge Cases) depends on Step 2.3
-  - Step 2.5 (Exports) can run in parallel with Step 2.4
+- **US3 Fix (Phase 2)**: Depends on Setup completion
+  - Step 2.1 (Helper Logic) must complete before Step 2.2
+  - Step 2.2 (UI Component) must complete before Step 2.3
+  - Step 2.3 (CSS Styling) can run in parallel [P]
+  - Step 2.4 (Integration) depends on Steps 2.2 and 2.3
 - **Verification (Phase 3)**: Depends on Phase 2 completion
   - Manual tests can run in parallel (different scenarios)
-  - Browser console checks can run in parallel with manual tests
+  - UI/UX checks can run in parallel with manual tests
   - Edge case tests should run after manual tests
   - Regression tests should run last
 - **Documentation (Phase 4)**: Depends on Phase 3 completion
@@ -201,31 +196,36 @@ Phase 3: Verification & Testing
 ### Within Phase 2
 
 ```
-T006, T007, T008 (Types) - Can run in parallel [P]
+T006, T007 (Helper Logic) - Can run in parallel [P]
     ↓
-T009, T010, T011 (Session ID) - Sequential (same file, same function)
+T008, T009, T010, T011 (UI Component) - Sequential (same file, same component)
     ↓
-T012, T013, T014, T015 (Completion Tracking) - Sequential (same logic block)
+T012, T013, T014, T015 (CSS) - Can run in parallel [P]
     ↓
-T016, T017, T018 (Edge Cases) - Sequential (builds on completion logic)
-    ↓
-T019, T020 (Exports) - Can run in parallel with edge cases [P]
+T016, T017, T018, T019 (Integration) - Sequential (testing integration points)
 ```
 
 ### Parallel Opportunities
 
-**Phase 2, Step 2.1** (Different files):
+**Phase 2, Step 2.1** (Different functions, can implement simultaneously):
 ```bash
-Task T006: "Add sessionId field to TimerSession in src/types/timer.ts"
-Task T007: "Create CompletionRecord interface in src/types/timer.ts"
-Task T008: "Add LAST_COMPLETION to STORAGE_KEYS in src/constants/defaults.ts"
+Task T006: "Create helper function to determine next break type"
+Task T007: "Create handleStartBreak function"
+```
+
+**Phase 2, Step 2.3** (Different CSS classes, can style simultaneously):
+```bash
+Task T012: "Create .break-pending-actions class"
+Task T013: "Style buttons"
+Task T014: "Add responsive layout"
+Task T015: "Add visual distinction"
 ```
 
 **Phase 3, Manual Testing** (Independent scenarios):
 ```bash
-Task T021: "Test completion tracking"
-Task T022: "Test single refresh"
-Task T023: "Test multiple refreshes"
+Task T020: "Test basic break start"
+Task T021: "Test button click"
+Task T022: "Test notification timeout"
 # Can all run in parallel
 ```
 
@@ -236,94 +236,121 @@ Task T023: "Test multiple refreshes"
 ### Core Fix (Must Complete)
 
 1. **Phase 1**: Setup & Prerequisites (~5 min)
-2. **Phase 2, Step 2.1**: Enhance Data Types (~3 min)
-3. **Phase 2, Steps 2.2-2.4**: Implement Completion Tracking (~15 min)
-4. **Phase 3**: Verification & Testing (~15 min)
-5. **Phase 4**: Documentation & Cleanup (~5 min)
+2. **Phase 2, Step 2.1**: Implement Helper Logic (~5 min)
+3. **Phase 2, Step 2.2**: Add Persistent UI Component (~10 min)
+4. **Phase 2, Step 2.3**: Add CSS Styling (~5 min)
+5. **Phase 2, Step 2.4**: Integration & Edge Cases (~5 min)
+6. **Phase 3**: Verification & Testing (~10 min)
+7. **Phase 4**: Documentation & Cleanup (~5 min)
 
 **Total Estimated Time**: ~45 minutes
 
-### Testing-First Approach (If Desired)
-
-While this is primarily a bug fix, you can validate the bug exists before fixing:
-
-1. **Phase 1**: Setup & Prerequisites
-2. **Phase 3, T021-T023**: Reproduce bug (count increments on each refresh)
-3. **Phase 2**: Implement fix
-4. **Phase 3, T021-T040**: Verify bug is fixed
-
 ### Incremental Validation
 
-- After Step 2.1: Verify types compile without errors
-- After Step 2.2: Verify sessionId is generated and logged
-- After Step 2.3: Verify CompletionRecord is saved
-- After Step 2.4: Test edge cases one by one
+- After Step 2.1: Verify helper functions return correct values
+- After Step 2.2: Verify UI appears when timer completes
+- After Step 2.3: Verify styling looks good and matches design
+- After Step 2.4: Test all integration points
 - After Phase 3: Full acceptance validation
 
 ---
 
 ## Key Implementation Details
 
-### Session ID Format
+### Helper Function - Determine Next Break Type
 
 ```typescript
-// Generate unique ID when timer starts
-const sessionId = `${Date.now()}-${mode}`;
-// Example: "1703012345678-focus"
+// In App.tsx
+const getNextBreakType = (): 'short-break' | 'long-break' => {
+  // After 4th Pomodoro (cyclePosition === 0 after completion) → long break
+  // Otherwise → short break
+  return sessionProgress.cyclePosition === 0 ? 'long-break' : 'short-break';
+};
 ```
 
-### Completion Tracking Pattern
+### UI Component Pattern
 
-```typescript
-// On mount/restore
-const lastCompletion = getStorageItem<CompletionRecord>(
-  STORAGE_KEYS.LAST_COMPLETION,
-  null
-);
+```tsx
+{/* Show break pending actions when focus timer completes */}
+{timer.status === 'completed' && timer.mode === 'focus' && (
+  <div className="break-pending-actions">
+    <p className="break-pending-message">
+      🎉 Focus session complete! Time for a break.
+    </p>
+    <div className="break-pending-buttons">
+      <button 
+        className="btn-primary"
+        onClick={handleStartBreak}
+      >
+        Start {getNextBreakType() === 'long-break' ? 'Long' : 'Short'} Break
+      </button>
+      <button 
+        className="btn-secondary"
+        onClick={handleSkipBreak}
+      >
+        Skip Break - Start Focus
+      </button>
+    </div>
+  </div>
+)}
+```
 
-const isAlreadyProcessed = 
-  lastCompletion && 
-  lastCompletion.sessionId === session.sessionId;
+### CSS Styling Pattern
 
-if (session.status === 'completed' && !isAlreadyProcessed) {
-  onComplete(session.mode);
-  setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
-    sessionId: session.sessionId,
-    completedAt: Date.now(),
-    mode: session.mode
-  });
+```css
+.break-pending-actions {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  background: var(--color-background-secondary);
+  text-align: center;
+}
+
+.break-pending-message {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+}
+
+.break-pending-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 ```
 
-### Backwards Compatibility
+### Integration with Session Tracking
 
 ```typescript
-// Handle old sessions without sessionId
-if (!saved.sessionId) {
-  saved.sessionId = `${Date.now()}-${saved.mode}-migrated`;
-}
+const handleStartBreak = () => {
+  const breakType = getNextBreakType();
+  timer.switchMode(breakType); // Switch to break mode (idle state)
+  timer.start(); // Start the break timer
+};
 ```
 
 ---
 
 ## Success Criteria (from spec.md)
 
-- ✅ **SC-002**: 0% of page refreshes cause duplicate session count increments
-- ✅ **SC-004**: User Story 2 acceptance scenarios pass (4 scenarios)
-- ✅ **SC-005**: Count remains accurate across 20+ refresh scenarios
+- ✅ **SC-006**: User Story 3 acceptance scenarios pass (4 scenarios)
+- ✅ **FR-005**: Persistent "Start Break" UI element visible when timer completes
+- ✅ **FR-006**: Break start persists across refreshes, dismissals, timeouts
 
 ---
 
 ## Notes
 
-- **Complexity**: Medium - requires type changes, localStorage management, and edge case handling
-- **Risk**: Low - additive changes, backwards compatible
-- **Files Modified**: 3 files (types, constants, useTimer hook)
-- **Breaking Changes**: None - sessionId is optional with fallback
-- **Testing**: Primarily manual (refresh-based scenarios)
-- **Estimated LOC**: ~30-40 lines added/modified
+- **Complexity**: Low-Medium - UI component with CSS styling and helper logic
+- **Risk**: Low - additive UI, no breaking changes to existing components
+- **Files Modified**: 2 files (App.tsx, App.css)
+- **Breaking Changes**: None - pure addition
+- **Testing**: Primarily manual (UI/UX testing)
+- **Estimated LOC**: ~40-50 lines added (UI + CSS)
 
 ---
 
-**Status**: Ready for implementation via `/speckit.implement bug 2`
+**Status**: Ready for implementation via `/speckit.implement bug 3`
 
