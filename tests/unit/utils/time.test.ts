@@ -17,9 +17,9 @@ describe('time utilities', () => {
     });
 
     it('should handle partial seconds correctly', () => {
-      expect(formatTime(500)).toBe('00:00'); // 0.5 seconds -> 0
-      expect(formatTime(1500)).toBe('00:01'); // 1.5 seconds -> 1
-      expect(formatTime(59500)).toBe('00:59'); // 59.5 seconds -> 59
+      expect(formatTime(500)).toBe('00:01'); // 0.5 seconds -> ceil to 1
+      expect(formatTime(1500)).toBe('00:02'); // 1.5 seconds -> ceil to 2
+      expect(formatTime(59500)).toBe('01:00'); // 59.5 seconds -> ceil to 60
     });
 
     it('should handle large durations', () => {
