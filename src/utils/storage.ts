@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   PREFERENCES: 'pomodoro_preferences',
   TIMER_STATE: 'pomodoro_timer_state',
   DAILY_PROGRESS: 'pomodoro_daily_progress',
+  LAST_COMPLETION: 'pomodoro_last_completion', // Tracks last completed session (Bug 2 fix)
 } as const;
 
 /**

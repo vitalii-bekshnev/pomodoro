@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { TimerMode, TimerStatus, TimerSession, DEFAULT_TIMER_SESSION } from '../types/timer';
+import { TimerMode, TimerStatus, TimerSession, DEFAULT_TIMER_SESSION, CompletionRecord } from '../types/timer';
 import { UserPreferences } from '../types/settings';
 import { minutesToMilliseconds } from '../utils/time';
 import { STORAGE_KEYS } from '../constants/defaults';
@@ -16,6 +16,7 @@ export interface UseTimerReturn {
   remaining: number;
   duration: number;
   status: TimerStatus;
+  sessionId: string; // Exposed for debugging (Bug 2 fix)
   start: () => void;
   pause: () => void;
   resume: () => void;
@@ -34,6 +35,11 @@ export function useTimer(
       STORAGE_KEYS.TIMER_STATE,
       DEFAULT_TIMER_SESSION
     );
+    
+    // Handle backwards compatibility: add sessionId if missing
+    if (!saved.sessionId) {
+      saved.sessionId = `${Date.now()}-${saved.mode}-migrated`;
+    }
     
     // Update duration based on preferences if mode matches
     const duration = getDurationForMode(saved.mode, preferences);
@@ -100,9 +106,31 @@ export function useTimer(
   }, [session]);
 
   // Handle timer that completed while page was closed/refreshed
+  // Check completion tracking to prevent duplicate onComplete() calls (Bug 2 fix)
   useEffect(() => {
     if (session.status === 'completed' && session.remaining === 0) {
-      onComplete(session.mode);
+      // Load last completion record to check if this session was already processed
+      const lastCompletion = getStorageItem<CompletionRecord | null>(
+        STORAGE_KEYS.LAST_COMPLETION,
+        null
+      );
+      
+      // Check if this completion was already processed
+      const isAlreadyProcessed = 
+        lastCompletion !== null && 
+        lastCompletion.sessionId === session.sessionId;
+      
+      if (!isAlreadyProcessed) {
+        // First time processing this completion
+        onComplete(session.mode);
+        
+        // Save completion record to prevent duplicate processing on future refreshes
+        setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
+          sessionId: session.sessionId,
+          completedAt: Date.now(),
+          mode: session.mode,
+        });
+      }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Run once on mount only to trigger completion notification for timers that finished while closed
@@ -127,6 +155,7 @@ export function useTimer(
       ...prev,
       status: 'running',
       startedAt: Date.now(),
+      sessionId: `${Date.now()}-${prev.mode}`, // Generate unique session ID
     }));
 
     intervalRef.current = window.setInterval(() => {
@@ -145,6 +174,13 @@ export function useTimer(
           
           // Call onComplete callback
           onComplete(prev.mode);
+          
+          // Save completion record to prevent duplicate processing on refresh (Bug 2 fix)
+          setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
+            sessionId: prev.sessionId,
+            completedAt: Date.now(),
+            mode: prev.mode,
+          });
 
           return {
             ...prev,
@@ -199,6 +235,7 @@ export function useTimer(
       remaining: duration,
       status: 'idle',
       startedAt: null,
+      sessionId: `${Date.now()}-${session.mode}`, // Generate new session ID on reset
     });
   }, [session.mode, preferences]);
 
@@ -209,14 +246,24 @@ export function useTimer(
       intervalRef.current = null;
     }
 
-    setSession((prev) => ({
-      ...prev,
-      remaining: 0,
-      status: 'completed',
-      startedAt: null,
-    }));
-
-    onComplete(session.mode);
+    setSession((prev) => {
+      // Call onComplete callback
+      onComplete(session.mode);
+      
+      // Save completion record to prevent duplicate processing on refresh (Bug 2 fix)
+      setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
+        sessionId: prev.sessionId,
+        completedAt: Date.now(),
+        mode: prev.mode,
+      });
+      
+      return {
+        ...prev,
+        remaining: 0,
+        status: 'completed',
+        startedAt: null,
+      };
+    });
   }, [session.mode, onComplete]);
 
   // Switch to a different mode
@@ -235,6 +282,7 @@ export function useTimer(
         remaining: duration,
         status: 'idle',
         startedAt: null,
+        sessionId: `${Date.now()}-${newMode}`, // Generate new session ID on mode switch
       });
     },
     [preferences]
@@ -245,6 +293,7 @@ export function useTimer(
     remaining: session.remaining,
     duration: session.duration,
     status: session.status,
+    sessionId: session.sessionId, // Expose for debugging (Bug 2 fix)
     start,
     pause,
     resume,
