@@ -182,6 +182,89 @@ docker inspect pomodoro
 docker build --no-cache -t pomodoro-app .
 ```
 
+## 🚀 Deployment
+
+The Pomodoro Timer is automatically deployed to GitHub Pages using GitHub Actions.
+
+### Deployment Status
+
+[![Deploy to GitHub Pages](https://github.com/vitaliibekshnev/pomodoro/actions/workflows/deploy.yml/badge.svg)](https://github.com/vitaliibekshnev/pomodoro/actions/workflows/deploy.yml)
+
+**Live Application**: https://vitaliibekshnev.github.io/pomodoro/
+
+### Automated Deployment
+
+Every push to the `main` branch automatically:
+1. ✅ Runs quality checks (ESLint, TypeScript, tests)
+2. ✅ Builds the production application
+3. ✅ Deploys to GitHub Pages
+4. ✅ Preserves build artifacts for 90 days
+
+### Deployment Workflow
+
+```mermaid
+graph LR
+    A[Push to main] --> B[Quality Checks]
+    B --> C[Build]
+    C --> D[Deploy to GitHub Pages]
+    C --> E[Upload Artifacts]
+```
+
+**Typical deployment time**: 1-3 minutes from push to live site
+
+### Pull Request Validation
+
+All pull requests are automatically validated:
+- ✅ ESLint code quality checks
+- ✅ TypeScript type checking
+- ✅ Jest test suite
+- ✅ Production build verification
+
+PRs must pass all checks before merging.
+
+### Viewing Workflow Runs
+
+1. Go to the [Actions tab](https://github.com/vitaliibekshnev/pomodoro/actions)
+2. Click on a workflow run to see details
+3. View logs for each job (quality-checks, build, deploy)
+4. Download build artifacts from the workflow run page
+
+### Manual Deployment
+
+If you need to trigger a deployment manually:
+
+```bash
+# Commit your changes
+git add .
+git commit -m "Your commit message"
+
+# Push to main branch
+git push origin main
+
+# Monitor deployment at:
+# https://github.com/vitaliibekshnev/pomodoro/actions
+```
+
+### Build Artifacts
+
+Production build artifacts are preserved for 90 days:
+- Available in the workflow run "Artifacts" section
+- Contains complete `dist/` folder
+- Useful for troubleshooting and rollback
+
+### Deployment Configuration
+
+**GitHub Pages Settings**:
+- Source: GitHub Actions
+- Branch: Deployed from workflow
+- Custom domain: Not configured (using default github.io URL)
+
+**Vite Configuration**:
+```typescript
+// vite.config.ts
+base: '/pomodoro/',  // Required for GitHub Pages subdirectory
+```
+
 ## 🎯 How to Use
 
 1. **Start a Focus Session**: Click "Start Focus" to begin a 25-minute work session
