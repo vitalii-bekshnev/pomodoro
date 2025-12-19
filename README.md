@@ -46,6 +46,142 @@ npm run build
 npm run preview
 ```
 
+## 🐳 Docker Deployment
+
+Run the Pomodoro Timer using Docker without installing Node.js on your machine.
+
+### Quick Start with Docker
+
+```bash
+# Build the Docker image
+docker build -t pomodoro-app .
+
+# Run the container
+docker run -d -p 8080:80 --name pomodoro pomodoro-app
+
+# Access the application
+open http://localhost:8080
+```
+
+### Using Docker Compose
+
+**Development**:
+```bash
+# Start the application
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the application
+docker-compose down
+```
+
+**Production**:
+```bash
+# Build and tag the image
+docker build -t pomodoro-app:latest .
+
+# Deploy with production configuration
+docker-compose -f docker-compose.prod.yml up -d
+
+# Stop production deployment
+docker-compose -f docker-compose.prod.yml down
+```
+
+### Docker Commands Reference
+
+```bash
+# Build image
+docker build -t pomodoro-app:latest .
+
+# Run container (development)
+docker run -d \
+  -p 8080:80 \
+  --name pomodoro \
+  --restart unless-stopped \
+  pomodoro-app:latest
+
+# View logs
+docker logs -f pomodoro
+
+# Check health status
+curl http://localhost:8080/health
+docker inspect --format='{{.State.Health.Status}}' pomodoro
+
+# Stop and remove container
+docker stop pomodoro && docker rm pomodoro
+```
+
+### Production Deployment
+
+1. **Build the image**:
+   ```bash
+   docker build -t pomodoro-app:1.0.0 .
+   docker tag pomodoro-app:1.0.0 pomodoro-app:latest
+   ```
+
+2. **Deploy with Docker Compose**:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+3. **Configure reverse proxy** (nginx/Traefik/Caddy):
+   ```nginx
+   # Example nginx configuration
+   server {
+       listen 443 ssl http2;
+       server_name pomodoro.example.com;
+
+       ssl_certificate /path/to/cert.pem;
+       ssl_certificate_key /path/to/key.pem;
+
+       location / {
+           proxy_pass http://localhost:80;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+### Docker Image Details
+
+- **Base Image**: nginx:alpine
+- **Production Size**: ~25MB (compressed)
+- **Build Time**: 3-4 minutes (first build)
+- **Startup Time**: <5 seconds
+- **Health Check**: Automatic health monitoring at `/health`
+
+### Docker Requirements
+
+- Docker 20.10+
+- Docker Compose 2.0+ (optional, for orchestration)
+
+### Troubleshooting Docker
+
+**Port already in use**:
+```bash
+# Use a different port
+docker run -d -p 3000:80 --name pomodoro pomodoro-app
+```
+
+**Container won't start**:
+```bash
+# Check logs
+docker logs pomodoro
+
+# Inspect container
+docker inspect pomodoro
+```
+
+**Image build fails**:
+```bash
+# Build with no cache
+docker build --no-cache -t pomodoro-app .
+```
+
 ## 🎯 How to Use
 
 1. **Start a Focus Session**: Click "Start Focus" to begin a 25-minute work session
