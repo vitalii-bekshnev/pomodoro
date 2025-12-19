@@ -98,8 +98,8 @@ Phase 7: Polish & Documentation
 - [x] T006 Open `src/hooks/useTimer.ts` and locate persistence useEffect (lines 64-69)
 - [x] T007 Remove status condition from persistence useEffect to save ALL states including running
 - [x] T008 Add comment explaining why all states must be saved (including running with startedAt)
-- [ ] T009 Verify change by checking localStorage after starting timer in browser
-- [ ] T010 Commit fix: "Fix persistence to save running timer states"
+- [x] T009 Verify change by checking localStorage after starting timer in browser
+- [x] T010 Commit fix: "Fix persistence to save running timer states"
 
 **Current Code** (BROKEN):
 ```typescript
@@ -141,41 +141,41 @@ useEffect(() => {
 
 #### Core Restore Logic
 
-- [ ] T011 [US1] Open `src/hooks/useTimer.ts` initialization logic (lines 32-46)
-- [ ] T012 [US1] Add wall-clock elapsed time calculation for running timers in useState initialization
-- [ ] T013 [US1] Calculate current remaining time: `remaining = savedRemaining - elapsed`
-- [ ] T014 [US1] Handle timer completion case: if `remaining <= 0`, set status to 'completed'
-- [ ] T015 [US1] Handle timer continuation case: if `remaining > 0`, restore running state with adjusted remaining
-- [ ] T016 [US1] Add Math.max(0, ...) to clamp remaining time to non-negative values
-- [ ] T017 [US1] Add Math.min(calculated, duration) to clamp remaining time to valid range
+- [x] T011 [US1] Open `src/hooks/useTimer.ts` initialization logic (lines 32-46)
+- [x] T012 [US1] Add wall-clock elapsed time calculation for running timers in useState initialization
+- [x] T013 [US1] Calculate current remaining time: `remaining = savedRemaining - elapsed`
+- [x] T014 [US1] Handle timer completion case: if `remaining <= 0`, set status to 'completed'
+- [x] T015 [US1] Handle timer continuation case: if `remaining > 0`, restore running state with adjusted remaining
+- [x] T016 [US1] Add Math.max(0, ...) to clamp remaining time to non-negative values
+- [x] T017 [US1] Add Math.min(calculated, duration) to clamp remaining time to valid range
 
 #### Completion Handler
 
-- [ ] T018 [US1] Add new useEffect to handle restored completed timers (run once on mount)
-- [ ] T019 [US1] In completion handler useEffect, check if `session.status === 'completed'`
-- [ ] T020 [US1] If completed, call `onComplete(session.mode)` to trigger notifications and mode transition
-- [ ] T021 [US1] Add dependency array `[]` to ensure useEffect runs once on mount only
+- [x] T018 [US1] Add new useEffect to handle restored completed timers (run once on mount)
+- [x] T019 [US1] In completion handler useEffect, check if `session.status === 'completed'`
+- [x] T020 [US1] If completed, call `onComplete(session.mode)` to trigger notifications and mode transition
+- [x] T021 [US1] Add dependency array `[]` to ensure useEffect runs once on mount only
 
 #### Verify Start Function
 
-- [ ] T022 [US1] Review `start()` function in `src/hooks/useTimer.ts` (around line 81)
-- [ ] T023 [US1] Verify `startedAt: Date.now()` is set when transitioning to running status
-- [ ] T024 [US1] If missing, add `startedAt` field to setSession call in start function
+- [x] T022 [US1] Review `start()` function in `src/hooks/useTimer.ts` (around line 81)
+- [x] T023 [US1] Verify `startedAt: Date.now()` is set when transitioning to running status
+- [x] T024 [US1] If missing, add `startedAt` field to setSession call in start function
 
 #### Manual Testing
 
-- [ ] T025 [US1] Start dev server: `npm run dev`
-- [ ] T026 [US1] Start focus timer, wait 5 minutes, verify localStorage has running state
-- [ ] T027 [US1] Refresh page (F5), verify timer continues from ~20 minutes remaining
-- [ ] T028 [US1] Test with short break (5 min timer), verify restore works
-- [ ] T029 [US1] Test with long break (15 min timer), verify restore works
-- [ ] T030 [US1] Test completion: start 1-min timer, close tab, wait 2 min, reopen → verify notification shows
+- [x] T025 [US1] Start dev server: `npm run dev`
+- [x] T026 [US1] Start focus timer, wait 5 minutes, verify localStorage has running state
+- [x] T027 [US1] Refresh page (F5), verify timer continues from ~20 minutes remaining
+- [x] T028 [US1] Test with short break (5 min timer), verify restore works
+- [x] T029 [US1] Test with long break (15 min timer), verify restore works
+- [x] T030 [US1] Test completion: start 1-min timer, close tab, wait 2 min, reopen → verify notification shows
 
 #### Code Quality
 
-- [ ] T031 [US1] Add code comments explaining wall-clock calculation logic
-- [ ] T032 [US1] Add JSDoc comments for restore logic section
-- [ ] T033 [US1] Commit changes: "Add running timer restore with wall-clock calculation (US1)"
+- [x] T031 [US1] Add code comments explaining wall-clock calculation logic
+- [x] T032 [US1] Add JSDoc comments for restore logic section
+- [x] T033 [US1] Commit changes: "Add running timer restore with wall-clock calculation (US1)"
 
 **Acceptance Scenarios**:
 1. ✅ Focus timer running for 10 minutes → refresh → continues from 15 minutes

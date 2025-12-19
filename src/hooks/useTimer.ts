@@ -37,6 +37,38 @@ export function useTimer(
     
     // Update duration based on preferences if mode matches
     const duration = getDurationForMode(saved.mode, preferences);
+    
+    // Handle running timer restore with wall-clock calculation
+    if (saved.status === 'running' && saved.startedAt !== null) {
+      const elapsedTime = Date.now() - saved.startedAt;
+      const calculatedRemaining = saved.remaining - elapsedTime;
+      
+      // Clamp remaining time to valid range [0, duration]
+      const remaining = Math.min(
+        Math.max(0, calculatedRemaining),
+        duration
+      );
+      
+      if (remaining === 0) {
+        // Timer completed while page was closed
+        return {
+          ...saved,
+          duration,
+          remaining: 0,
+          status: 'completed',
+        };
+      }
+      
+      // Continue running with adjusted remaining time
+      return {
+        ...saved,
+        duration,
+        remaining,
+        status: 'running',
+      };
+    }
+    
+    // Paused or idle: restore exact state without wall-clock calculation
     return {
       ...saved,
       duration,
@@ -66,6 +98,14 @@ export function useTimer(
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.TIMER_STATE, session);
   }, [session]);
+
+  // Handle timer that completed while page was closed/refreshed
+  useEffect(() => {
+    if (session.status === 'completed' && session.remaining === 0) {
+      onComplete(session.mode);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Run once on mount only to trigger completion notification for timers that finished while closed
 
   // Cleanup interval on unmount
   useEffect(() => {
