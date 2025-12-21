@@ -58,8 +58,14 @@ export const App: React.FC = () => {
 
       // Show notification banner
       showBanner(mode);
+
+      // Auto-transition from focus to break (Bug 4 fix)
+      if (mode === 'focus') {
+        const nextBreakMode = getNextBreakMode();
+        timer.switchMode(nextBreakMode);
+      }
     },
-    [incrementSession, playFocusComplete, playBreakComplete, showBanner]
+    [incrementSession, playFocusComplete, playBreakComplete, showBanner, getNextBreakMode, timer]
   );
 
   // Timer hook

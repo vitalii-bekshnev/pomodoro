@@ -70,11 +70,11 @@ Phase 1 (Setup) ─┐
 
 **Tasks**:
 
-- [ ] T001 Review current `handleTimerComplete` implementation in src/components/App.tsx (lines 45-63)
-- [ ] T002 Verify `handleStartBreak` already calls `timer.start()` after `timer.switchMode()` in src/components/App.tsx (line 113)
-- [ ] T003 Verify `handleSkipBreak` already calls `timer.start()` after `timer.switchMode()` in src/components/App.tsx (line 120)
-- [ ] T004 Review `getNextBreakMode()` function from `useSessionTracking` hook to understand break type selection logic
-- [ ] T005 Review Bug 3 persistent UI implementation in src/components/App.tsx (lines 158-173) to understand when buttons appear
+- [x] T001 Review current `handleTimerComplete` implementation in src/components/App.tsx (lines 45-63)
+- [x] T002 Verify `handleStartBreak` already calls `timer.start()` after `timer.switchMode()` in src/components/App.tsx (line 113)
+- [x] T003 Verify `handleSkipBreak` already calls `timer.start()` after `timer.switchMode()` in src/components/App.tsx (line 120)
+- [x] T004 Review `getNextBreakMode()` function from `useSessionTracking` hook to understand break type selection logic
+- [x] T005 Review Bug 3 persistent UI implementation in src/components/App.tsx (lines 158-173) to understand when buttons appear
 
 **Completion Criteria**:
 - ✅ Confirmed `handleStartBreak` and `handleSkipBreak` already implement auto-start (US2, US3)
@@ -99,11 +99,11 @@ Phase 1 (Setup) ─┐
 
 ### Implementation Tasks
 
-- [ ] T006 [US1] Add auto-transition logic to `handleTimerComplete` function in src/components/App.tsx after line 60
-- [ ] T007 [US1] Add conditional check for `mode === 'focus'` to trigger auto-transition
-- [ ] T008 [US1] Call `getNextBreakMode()` to determine if short or long break
-- [ ] T009 [US1] Call `timer.switchMode(nextBreakMode)` to transition to break mode
-- [ ] T010 [US1] Update `handleTimerComplete` dependency array to include `timer` and `getNextBreakMode`
+- [x] T006 [US1] Add auto-transition logic to `handleTimerComplete` function in src/components/App.tsx after line 60
+- [x] T007 [US1] Add conditional check for `mode === 'focus'` to trigger auto-transition
+- [x] T008 [US1] Call `getNextBreakMode()` to determine if short or long break
+- [x] T009 [US1] Call `timer.switchMode(nextBreakMode)` to transition to break mode
+- [x] T010 [US1] Update `handleTimerComplete` dependency array to include `timer` and `getNextBreakMode`
 
 **Implementation Pattern**:
 ```typescript
