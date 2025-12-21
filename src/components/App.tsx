@@ -58,18 +58,21 @@ export const App: React.FC = () => {
 
       // Show notification banner
       showBanner(mode);
-
-      // Auto-transition from focus to break (Bug 4 fix)
-      if (mode === 'focus') {
-        const nextBreakMode = getNextBreakMode();
-        timer.switchMode(nextBreakMode);
-      }
     },
-    [incrementSession, playFocusComplete, playBreakComplete, showBanner, getNextBreakMode, timer]
+    [incrementSession, playFocusComplete, playBreakComplete, showBanner]
   );
 
   // Timer hook
   const timer = useTimer(preferences, handleTimerComplete);
+
+  // Auto-transition from focus complete to break (Bug 4 fix)
+  // Using useEffect to avoid circular dependency (handleTimerComplete needs timer, but timer needs handleTimerComplete)
+  React.useEffect(() => {
+    if (timer.status === 'completed' && timer.mode === 'focus') {
+      const nextBreakMode = getNextBreakMode();
+      timer.switchMode(nextBreakMode);
+    }
+  }, [timer.status, timer.mode, timer, getNextBreakMode]);
 
   // Handle "Start Next" action from notification banner
   const handleStartNext = useCallback(() => {
