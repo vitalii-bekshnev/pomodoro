@@ -1,7 +1,8 @@
 # Dependencies
-node_modules/
-/.pnp
 .pnp.js
+.vite/
+/.pnp
+node_modules/
 
 # Testing
 /coverage
@@ -27,4 +28,3 @@ node_modules/
 *.tmp
 .cache/
 .temp/
-

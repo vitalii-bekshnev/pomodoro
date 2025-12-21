@@ -6,7 +6,7 @@ import '@testing-library/jest-dom';
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: jest.fn(),
+  getItem: jest.fn().mockReturnValue(null), // Return null instead of undefined
   setItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),

@@ -137,14 +137,27 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
           </button>
         )}
 
-        {status === 'running' && (
+        {/* Skip Focus button - only during running focus */}
+        {mode === 'focus' && status === 'running' && (
           <button
             className="control-button secondary"
             onClick={handleSkip}
             disabled={isDisabled}
-            title={mode === 'focus' ? 'Skip focus session' : 'Skip break'}
+            title="Skip focus session"
           >
-            {mode === 'focus' ? 'Skip Focus' : 'Skip Break'}
+            Skip Focus
+          </button>
+        )}
+
+        {/* Skip Break button - during any break (not idle) */}
+        {(mode === 'short-break' || mode === 'long-break') && status !== 'idle' && (
+          <button
+            className="control-button secondary"
+            onClick={handleSkip}
+            disabled={isDisabled}
+            title="Skip break and start next focus session"
+          >
+            Skip Break
           </button>
         )}
       </div>

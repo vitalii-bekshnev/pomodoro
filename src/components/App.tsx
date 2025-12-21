@@ -65,6 +65,15 @@ export const App: React.FC = () => {
   // Timer hook
   const timer = useTimer(preferences, handleTimerComplete);
 
+  // Auto-transition from focus complete to break (Bug 4 fix)
+  // Using useEffect to avoid circular dependency (handleTimerComplete needs timer, but timer needs handleTimerComplete)
+  React.useEffect(() => {
+    if (timer.status === 'completed' && timer.mode === 'focus') {
+      const nextBreakMode = getNextBreakMode();
+      timer.switchMode(nextBreakMode);
+    }
+  }, [timer.status, timer.mode, timer, getNextBreakMode]);
+
   // Handle "Start Next" action from notification banner
   const handleStartNext = useCallback(() => {
     dismissBanner();
@@ -93,11 +102,36 @@ export const App: React.FC = () => {
   // Override skip function to reset cycle when skipping focus
   const handleSkip = useCallback(() => {
     if (timer.mode === 'focus') {
-      // Reset cycle when skipping focus session
+      // Skip focus: reset cycle and complete session
       resetCycle();
+      timer.skip();
+    } else {
+      // Skip break: transition to focus and auto-start
+      timer.switchMode('focus');
+      timer.start();
     }
-    timer.skip();
   }, [timer, resetCycle]);
+
+  // Helper to determine next break type (short vs long) - Bug 3 fix
+  const getNextBreakType = useCallback((): 'short-break' | 'long-break' => {
+    const nextMode = getNextBreakMode();
+    // getNextBreakMode always returns a break mode (short or long), but TypeScript needs explicit cast
+    return nextMode as 'short-break' | 'long-break';
+  }, [getNextBreakMode]);
+
+  // Handle starting break from persistent UI - Bug 3 fix
+  const handleStartBreak = useCallback(() => {
+    const breakType = getNextBreakType();
+    timer.switchMode(breakType);
+    timer.start();
+  }, [getNextBreakType, timer]);
+
+  // Handle skipping break and starting new focus - Bug 4 placeholder
+  const handleSkipBreak = useCallback(() => {
+    // Bug 4 implementation: skip break and start new focus session
+    timer.switchMode('focus');
+    timer.start();
+  }, [timer]);
 
   return (
     <div className="app">
@@ -137,6 +171,29 @@ export const App: React.FC = () => {
           <SessionCounter completedCount={completedCount} />
           <CycleIndicator cyclePosition={cyclePosition} />
         </div>
+
+        {/* Persistent break start option - Bug 3 fix */}
+        {timer.status === 'completed' && timer.mode === 'focus' && (
+          <div className="break-pending-actions">
+            <p className="break-pending-message">
+              🎉 Focus session complete! Time for a break.
+            </p>
+            <div className="break-pending-buttons">
+              <button 
+                className="btn-break-start"
+                onClick={handleStartBreak}
+              >
+                Start {getNextBreakType() === 'long-break' ? 'Long' : 'Short'} Break
+              </button>
+              <button 
+                className="btn-skip-break"
+                onClick={handleSkipBreak}
+              >
+                Skip Break - Start Focus
+              </button>
+            </div>
+          </div>
+        )}
 
         <Timer {...timer} skip={handleSkip} />
       </main>

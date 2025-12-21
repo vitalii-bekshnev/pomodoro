@@ -30,6 +30,24 @@ export interface TimerSession {
   
   /** Timestamp when timer was last started (for drift compensation) */
   startedAt: number | null;
+  
+  /** Unique identifier for this timer session (for completion tracking) */
+  sessionId: string;
+}
+
+/**
+ * Completion record for tracking processed timer completions
+ * Used to prevent duplicate onComplete() calls on page refresh
+ */
+export interface CompletionRecord {
+  /** Session ID that completed */
+  sessionId: string;
+  
+  /** Timestamp when completion was processed (Unix ms) */
+  completedAt: number;
+  
+  /** Mode that completed */
+  mode: TimerMode;
 }
 
 /**
@@ -41,5 +59,6 @@ export const DEFAULT_TIMER_SESSION: TimerSession = {
   remaining: 25 * 60 * 1000,
   status: 'idle',
   startedAt: null,
+  sessionId: `${Date.now()}-focus`, // Default session ID
 };
 
