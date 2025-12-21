@@ -1,367 +1,484 @@
-# Contract: Timer Auto-Transition Behavior
+# Contract: Timer State Transitions for Skip Break
 
-**Feature**: `008-fix-skip-break`  
-**Date**: December 21, 2025  
-**Purpose**: Define the contract for automatic timer state transitions
-
----
+**Feature**: 008-fix-skip-break  
+**Created**: December 21, 2025  
+**Purpose**: Define the contract for Skip Break button behavior and state transitions
 
 ## Overview
 
-This document specifies the behavior contract for auto-transitions and auto-start functionality in the Pomodoro timer.
+This contract defines the expected behavior of the Skip Break functionality, including button visibility, state transitions, and handler responsibilities.
 
----
+## Contract 1: TimerControls Component API
 
-## Contract 1: Auto-Transition on Focus Complete
-
-### Trigger Condition
-
-**WHEN**: Focus timer reaches 00:00 and transitions to `status='completed'`
-
-**THEN**: System SHALL automatically switch timer to break mode (idle state)
-
-### Pre-conditions
-
-- Timer mode MUST be `'focus'`
-- Timer status MUST become `'completed'`
-- Timer remaining MUST be `0`
-
-### Post-conditions
-
-- Timer mode SHALL be `'short-break'` OR `'long-break'` (based on cycle position)
-- Timer status SHALL be `'idle'`
-- Timer duration SHALL be set to break duration (5 min for short, 15 min for long)
-- Timer remaining SHALL equal duration
-- `sessionId` SHALL be regenerated (new session)
-
-### Break Type Selection
-
-**IF** cycle position is 1, 2, or 3:
-- **THEN** mode becomes `'short-break'`
-- Duration: 5 minutes (300,000 ms)
-
-**IF** cycle position is 0 (after 4th focus):
-- **THEN** mode becomes `'long-break'`
-- Duration: 15 minutes (900,000 ms)
-
-### Timing Guarantee
-
-- Auto-transition SHALL complete within 100ms of focus completion
-- Auto-transition SHALL occur before next UI render cycle
-- `onComplete()` callback SHALL be called BEFORE auto-transition
-
-### Persistence
-
-- New timer state (break mode, idle status) SHALL be saved to localStorage
-- Page refresh after auto-transition SHALL preserve break mode (not revert to focus)
-
-### Examples
-
-**Example 1: 1st Focus Complete (Short Break)**
-```typescript
-// Before:
-{ mode: 'focus', status: 'running', remaining: 1 }
-
-// After completion:
-{ mode: 'focus', status: 'completed', remaining: 0 }
-
-// After auto-transition:
-{ mode: 'short-break', status: 'idle', remaining: 300000, duration: 300000 }
-```
-
-**Example 2: 4th Focus Complete (Long Break)**
-```typescript
-// Before:
-{ mode: 'focus', status: 'running', remaining: 1 }
-
-// After completion:
-{ mode: 'focus', status: 'completed', remaining: 0 }
-
-// After auto-transition:
-{ mode: 'long-break', status: 'idle', remaining: 900000, duration: 900000 }
-```
-
----
-
-## Contract 2: Auto-Start on "Start Break" Click
-
-### Trigger Condition
-
-**WHEN**: User clicks "Start Break" button
-
-**THEN**: System SHALL immediately switch to break mode AND start timer running
-
-### Pre-conditions
-
-- Timer mode MAY be any mode (focus or break)
-- Timer status SHOULD be `'completed'` or `'idle'`
-- Break start button MUST be visible (rendered in UI)
-
-### Post-conditions
-
-- Timer mode SHALL be correct break type (`'short-break'` or `'long-break'`)
-- Timer status SHALL be `'running'` (not `'idle'`)
-- Timer countdown SHALL begin immediately
-- `startedAt` timestamp SHALL be set to current time
-
-### Single-Click Guarantee
-
-- User SHALL NOT need to click a second time to start timer
-- State transition from idle → running SHALL occur in single event handler
-- No intermediate idle state SHALL be visible to user
-
-### Implementation Pattern
+### Interface
 
 ```typescript
-handleStartBreak() {
-  const breakType = getNextBreakType();
-  timer.switchMode(breakType);  // Sets mode, duration, status='idle'
-  timer.start();                 // Changes status='running', starts interval
+export interface TimerControlsProps {
+  status: TimerStatus;           // Current timer status
+  mode: TimerMode;                // Current timer mode
+  onStart: () => void;            // Start timer from idle
+  onPause: () => void;            // Pause running timer
+  onResume: () => void;           // Resume paused timer
+  onReset: () => void;            // Reset timer to initial state
+  onSkip: () => void;             // Skip current session (focus or break)
 }
 ```
 
-### Example
+### Button Visibility Contract
+
+#### Skip Focus Button
+
+**Condition**: 
+```typescript
+visible = (mode === 'focus' && status === 'running')
+```
+
+**Label**: "Skip Focus"
+
+**Handler**: Calls `onSkip()` prop
+
+**Behavior**: 
+- Resets cycle position to 0
+- Completes focus session
+- Shows notification banner
+
+---
+
+#### Skip Break Button (FIXED)
+
+**Condition (Before Fix)**:
+```typescript
+visible = (status === 'running')  // ← BUG: Too restrictive
+```
+
+**Condition (After Fix)**:
+```typescript
+visible = (
+  (mode === 'short-break' || mode === 'long-break') && 
+  status !== 'idle'
+)
+```
+
+**Rationale for `status !== 'idle'`**:
+- Skip button should not appear before break has been started/viewed
+- If status is 'idle', user should use "Start Break" button instead
+- Prevents UI confusion: don't show both "Start Break" and "Skip Break" simultaneously
+
+**Label**: "Skip Break"
+
+**Handler**: Calls `onSkip()` prop
+
+**Behavior (Expected After Handler Fix)**: 
+- Immediately switches to focus mode
+- Auto-starts focus timer (status='running')
+- Does NOT increment Pomodoro count
+- Does NOT modify cycle position
+
+---
+
+### Debouncing Contract
+
+**Requirement**: All buttons must be debounced to prevent rapid clicks
+
+**Implementation**:
+```typescript
+const DEBOUNCE_DELAY = 500; // milliseconds
+
+// After any button click:
+1. Execute action immediately
+2. Disable ALL buttons for 500ms
+3. Re-enable buttons after delay
+```
+
+**Verification**:
+- Clicking Skip Break multiple times within 500ms processes only the first click
+- Other buttons (Start, Pause, Reset) also disabled during debounce period
+- Debounce timer cleaned up on component unmount
+
+---
+
+## Contract 2: App Component Skip Break Handler
+
+### Current Implementation (Broken)
 
 ```typescript
-// Before click:
-{ mode: 'focus', status: 'completed', remaining: 0 }
+const handleSkip = useCallback(() => {
+  if (timer.mode === 'focus') {
+    resetCycle();
+  }
+  timer.skip();  // ← For breaks, this completes break but stays in break state
+}, [timer, resetCycle]);
+```
 
-// After "Start Break" click (single click):
-{ mode: 'short-break', status: 'running', remaining: 300000, startedAt: 1703012345678 }
-// Timer is counting down immediately
+**Issue**: `timer.skip()` sets status to 'completed' but doesn't transition mode to focus
+
+---
+
+### Required Fix
+
+**Option A: Modify handleSkip to Handle Breaks Differently**
+
+```typescript
+const handleSkip = useCallback(() => {
+  if (timer.mode === 'focus') {
+    // Skip focus: reset cycle and complete
+    resetCycle();
+    timer.skip();
+  } else {
+    // Skip break: transition to focus and auto-start
+    timer.switchMode('focus');
+    timer.start();
+  }
+}, [timer, resetCycle]);
+```
+
+**Option B: Create Separate Break Skip Handler**
+
+```typescript
+// Keep handleSkip for focus only
+const handleSkip = useCallback(() => {
+  if (timer.mode === 'focus') {
+    resetCycle();
+    timer.skip();
+  }
+}, [timer, resetCycle]);
+
+// New handler for break skip
+const handleSkipBreak = useCallback(() => {
+  timer.switchMode('focus');
+  timer.start();
+}, [timer]);
+
+// Pass different handler to TimerControls based on mode
+const skipHandler = timer.mode === 'focus' ? handleSkip : handleSkipBreak;
+```
+
+**Option C: Use Existing handleSkipBreak for Both**
+
+```typescript
+// Reuse existing handleSkipBreak (line 126-130)
+const handleSkipBreak = useCallback(() => {
+  timer.switchMode('focus');
+  timer.start();
+}, [timer]);
+
+// Modify handleSkip to call handleSkipBreak for breaks
+const handleSkip = useCallback(() => {
+  if (timer.mode === 'focus') {
+    resetCycle();
+    timer.skip();
+  } else {
+    handleSkipBreak();
+  }
+}, [timer, resetCycle, handleSkipBreak]);
+```
+
+**Recommended**: Option A (simplest, least code change)
+
+---
+
+## Contract 3: useTimer Hook State Transitions
+
+### Function: switchMode(mode: TimerMode)
+
+**Pre-conditions**: Can be called from any state
+
+**Actions**:
+1. Stop countdown interval (if running)
+2. Set `mode` = new mode
+3. Set `duration` = default for new mode (from preferences)
+4. Set `remaining` = `duration`
+5. Set `status` = `'idle'`
+6. Set `startedAt` = `null`
+7. Generate new `sessionId`
+8. Persist to localStorage
+
+**Post-conditions**:
+- Timer is in idle state with full duration for new mode
+- Countdown is stopped
+- localStorage updated
+
+---
+
+### Function: start()
+
+**Pre-conditions**: 
+- Can be called from any status except 'running'
+- Typically called from 'idle', 'paused', or 'completed' status
+
+**Actions**:
+1. Set `status` = `'running'`
+2. Set `startedAt` = `Date.now()`
+3. Generate new `sessionId` (if starting from idle/completed)
+4. Start countdown interval (100ms precision)
+5. Persist to localStorage
+
+**Post-conditions**:
+- Timer is running and counting down
+- `remaining` decreases every 100ms
+- When `remaining` reaches 0, calls `onComplete(mode)`
+
+---
+
+### Function: skip()
+
+**Pre-conditions**: Typically called when status is 'running'
+
+**Actions**:
+1. Stop countdown interval
+2. Call `onComplete(mode)` callback
+3. Set `remaining` = 0
+4. Set `status` = `'completed'`
+5. Set `startedAt` = `null`
+6. Save completion record to prevent duplicate processing
+7. Persist to localStorage
+
+**Post-conditions**:
+- Timer shows 00:00
+- Status is 'completed'
+- Notification banner appears
+- Mode is unchanged ← **This is why skip() doesn't work for breaks**
+
+---
+
+## Contract 4: Skip Break State Transition Sequence
+
+### Sequence Diagram
+
+```
+┌─────┐                  ┌────────────────┐                ┌──────────┐
+│User │                  │ TimerControls  │                │   App    │
+└──┬──┘                  └───────┬────────┘                └────┬─────┘
+   │                             │                              │
+   │ Click "Skip Break"          │                              │
+   │─────────────────────────────>                              │
+   │                             │                              │
+   │                             │ Debounce check (500ms)       │
+   │                             │──────┐                       │
+   │                             │      │                       │
+   │                             │<─────┘                       │
+   │                             │                              │
+   │                             │ onSkip()                     │
+   │                             │──────────────────────────────>
+   │                             │                              │
+   │                             │                              │ Check mode
+   │                             │                              │──────┐
+   │                             │                              │      │
+   │                             │                              │<─────┘
+   │                             │                              │
+   │                             │                              │ If break:
+   │                             │                              │ switchMode('focus')
+   │                             │                              │ start()
+   │                             │                              │──────┐
+   │                             │                              │      │
+   │                             │                              │<─────┘
+   │                             │                              │
+   │                             │ Re-render with new state     │
+   │                             │<──────────────────────────────
+   │                             │                              │
+   │ See focus timer running     │                              │
+   │<────────────────────────────│                              │
+   │                             │                              │
 ```
 
 ---
 
-## Contract 3: Auto-Start on "Skip Break - Start Focus" Click
+## Contract 5: Acceptance Criteria
 
-### Trigger Condition
+### AC-001: Button Visibility
 
-**WHEN**: User clicks "Skip Break - Start Focus" button
+**Given**: Timer is in short-break or long-break mode  
+**And**: Status is 'running', 'paused', or 'completed'  
+**When**: Rendering TimerControls  
+**Then**: "Skip Break" button is visible
 
-**THEN**: System SHALL immediately switch to focus mode AND start timer running
-
-### Pre-conditions
-
-- Button MUST be visible (timer completed or break pending)
-- Focus session MUST have already completed (session count already incremented)
-
-### Post-conditions
-
-- Timer mode SHALL be `'focus'`
-- Timer status SHALL be `'running'` (not `'idle'`)
-- Timer duration SHALL be 25 minutes (default focus duration)
-- Timer countdown SHALL begin immediately
-- `startedAt` timestamp SHALL be set to current time
-- Session count SHALL NOT increment again (was already incremented when focus completed)
-
-### Session Tracking Contract
-
-**SHALL NOT** call `onComplete()` for skip break action
-
-**Rationale**: Break was not completed, it was skipped. The Pomodoro was already counted when focus finished. Skipping a break does not complete a new Pomodoro.
-
-### Implementation Pattern
-
-```typescript
-handleSkipBreak() {
-  timer.switchMode('focus');  // Sets mode='focus', duration=25min, status='idle'
-  timer.start();               // Changes status='running', starts interval
-  // Note: Does NOT call onComplete() or increment session
-}
-```
-
-### Example
-
-```typescript
-// Before click (break pending):
-{ mode: 'short-break', status: 'idle', remaining: 300000 }
-
-// After "Skip Break - Start Focus" click (single click):
-{ mode: 'focus', status: 'running', remaining: 1500000, startedAt: 1703012345678 }
-// Focus timer is counting down immediately
-// Session count unchanged (was already incremented when previous focus completed)
-```
+**Counter-case**:  
+**Given**: Timer is in short-break or long-break mode  
+**And**: Status is 'idle'  
+**When**: Rendering TimerControls  
+**Then**: "Skip Break" button is NOT visible
 
 ---
 
-## Contract 4: State Persistence Across Page Refresh
+### AC-002: Skip Break During Running Break
 
-### Trigger Condition
-
-**WHEN**: User refreshes page (F5 or browser reload)
-
-**THEN**: Timer state (including any auto-transitions) SHALL be restored from localStorage
-
-### Persistence Guarantees
-
-**Auto-transition SHALL persist**:
-```typescript
-// Scenario: Focus completes → Auto-transitions to break → User refreshes
-
-// localStorage contains:
-{ mode: 'short-break', status: 'idle', remaining: 300000 }
-
-// After refresh, timer shows:
-- Mode: Short Break (not Focus)
-- Status: Idle (ready to start)
-- Duration: 5 minutes
-```
-
-**Running timer SHALL restore**:
-```typescript
-// Scenario: User starts break → Refreshes mid-countdown
-
-// localStorage contains:
-{ mode: 'short-break', status: 'running', startedAt: 1703012345000 }
-
-// After refresh:
-- Calculate elapsed time since startedAt
-- Restore remaining time (Bug 1 fix ensures accuracy)
-- Resume countdown
-```
-
-### Implementation
-
-**Contract with Bug 1**: Leverage existing wall-clock restoration logic
-
-**Existing behavior** (from Bug 1 fix):
-```typescript
-if (saved.status === 'running' && saved.startedAt !== null) {
-  const elapsedTime = Date.now() - saved.startedAt;
-  const remaining = saved.duration - elapsedTime;
-  // Restore with accurate remaining time
-}
-```
-
-**No new code needed**: Auto-transitions save state via existing `useEffect` that persists on every state change
+**Given**: Timer is in break mode with status 'running'  
+**When**: User clicks "Skip Break" button  
+**Then**: 
+- Timer mode changes to 'focus'
+- Timer status changes to 'running' (not 'idle')
+- Timer duration is set to 25 minutes
+- Timer remaining time is 25 minutes
+- Countdown begins immediately
+- localStorage reflects new state
 
 ---
 
-## Contract 5: Integration with Existing Fixes
+### AC-003: Skip Break During Paused Break
 
-### Integration with Bug 1 (Timer Accuracy)
-
-**SHALL NOT** interfere with wall-clock restoration logic
-
-**Verification**: Auto-transition changes mode but preserves restoration accuracy
-
-### Integration with Bug 2 (Completion Tracking)
-
-**SHALL NOT** cause duplicate session increments
-
-**Guarantee**: Auto-transition occurs AFTER `onComplete()` and does NOT call `onComplete()` again
-
-**Example**:
-```typescript
-// Focus completes:
-onComplete('focus');              // Increments session count: count = 1
-setStorageItem(LAST_COMPLETION);  // Save completion record (Bug 2)
-
-// Then auto-transition:
-timer.switchMode('short-break');  // Does NOT call onComplete()
-
-// Result: Session count = 1 (correct, no duplicate)
-```
-
-### Integration with Bug 3 (Persistent UI)
-
-**SHALL** work seamlessly with persistent "Start Break" button
-
-**Guarantee**: After auto-transition to break mode, persistent button remains functional
-
-**Example**:
-```typescript
-// Focus completes → Auto-transition to break idle
-{ mode: 'short-break', status: 'idle' }
-
-// Persistent UI renders (Bug 3):
-{timer.status === 'completed' && timer.mode === 'focus' && ...}
-// Wait, this condition is FALSE now (mode is 'short-break', not 'focus')
-
-// Issue: Need to update Bug 3 UI condition to also show for break idle
-```
-
-**Action required**: Verify Bug 3 UI button visibility after auto-transition
+**Given**: Timer is in break mode with status 'paused'  
+**When**: User clicks "Skip Break" button  
+**Then**: Same as AC-002 (immediate focus timer running)
 
 ---
 
-## Validation & Testing Contract
+### AC-004: Skip Break After Completed Break
 
-### Manual Test Cases (Must Pass)
-
-**Test 1: Auto-Transition**
-- Start focus timer → Let complete → Should auto-switch to break idle
-- ✅ PASS: Mode changes to break, status is idle, duration is correct
-
-**Test 2: No Double-Click**
-- Complete focus → Auto-transition → Click "Start Break" → Should start immediately
-- ✅ PASS: Timer starts running on single click
-
-**Test 3: Skip Break**
-- Complete focus → Click "Skip Break - Start Focus" → Should start focus immediately
-- ✅ PASS: Timer switches to focus and starts running on single click
-
-**Test 4: Session Tracking**
-- Complete 3 focuses → Skip break → Complete 4th focus → Should show long break
-- ✅ PASS: Cycle position tracks correctly
-
-**Test 5: Persistence**
-- Complete focus → Auto-transition → Refresh → Should show break mode
-- ✅ PASS: Break mode persists after refresh
-
-### Regression Tests (Must Pass)
-
-- ✅ Bug 1: Timer accuracy within ±1 second after refresh
-- ✅ Bug 2: No duplicate session count increments
-- ✅ Bug 3: Persistent UI buttons remain functional
+**Given**: Timer is in break mode with status 'completed'  
+**When**: User clicks "Skip Break" button  
+**Then**: Same as AC-002 (immediate focus timer running)
 
 ---
 
-## Error Handling Contract
+### AC-005: Session Tracking Unaffected
 
-### Scenario: switchMode() Fails
-
-**IF** `switchMode()` throws error or state update fails
-
-**THEN** System SHALL:
-1. Log error to console
-2. NOT proceed with `start()` call
-3. Leave timer in previous state (fail-safe)
-
-### Scenario: start() Fails
-
-**IF** `start()` throws error after `switchMode()` succeeds
-
-**THEN** System SHALL:
-1. Log error to console
-2. Timer remains in idle state (user can manually retry)
-3. No data corruption (state is valid idle state)
+**Given**: User has completed 2 Pomodoros (count = 2, cycle = 2)  
+**When**: User skips a break  
+**Then**: 
+- Completed count remains 2
+- Cycle position remains 2
+- Next break type determination unchanged
 
 ---
 
-## Performance Contract
+### AC-006: Debouncing Prevents Duplicate Actions
 
-### Auto-Transition Performance
-
-**SHALL** complete within 100ms of focus completion
-
-**Measurement**: Time from `remaining=0` to `mode='break'`
-
-### Button Click Performance
-
-**SHALL** start timer within 50ms of button click
-
-**Measurement**: Time from click event to `status='running'`
-
-### localStorage Write Performance
-
-**SHALL** persist state within 10ms of state change
-
-**Measurement**: Time from `setState()` to localStorage write complete
+**Given**: User clicks "Skip Break" button  
+**When**: User clicks "Skip Break" again within 500ms  
+**Then**: 
+- Second click is ignored
+- Timer state only changes once
+- Button remains disabled until 500ms elapsed
 
 ---
 
-**Status**: Contracts defined, ready for implementation
+### AC-007: State Persistence Across Refresh
 
+**Given**: User clicks "Skip Break" during running break  
+**When**: User immediately refreshes page (within 1 second)  
+**Then**: 
+- Timer restores in focus mode
+- Timer is running (not idle)
+- Remaining time is approximately 25 minutes minus elapsed time
+- No data loss or corruption
 
+---
+
+## Contract 6: Error Handling
+
+### Error Case 1: Rapid Clicks
+
+**Scenario**: User double-clicks Skip Break button
+
+**Expected Behavior**: 
+- First click processes immediately
+- Button becomes disabled
+- Second click is blocked by debounce
+- After 500ms, button re-enables (in focus mode, Skip Break button now hidden)
+
+**Implementation**: Existing debounce logic in TimerControls
+
+---
+
+### Error Case 2: State Corruption
+
+**Scenario**: localStorage contains invalid timer state
+
+**Expected Behavior**:
+- `useTimer` hook validates restored state
+- Falls back to DEFAULT_TIMER_SESSION if invalid
+- Logs error to console (if applicable)
+- User sees default timer state (focus, 25 min, idle)
+
+**Implementation**: Existing validation in useTimer initialization
+
+---
+
+### Error Case 3: Mode Mismatch
+
+**Scenario**: Skip Break button somehow rendered when mode is 'focus'
+
+**Expected Behavior**:
+- Handler checks mode before acting
+- If mode is 'focus', calls skip() (reset cycle + complete)
+- If mode is break, calls switchMode + start
+- Graceful handling, no crash
+
+**Implementation**: Type safety via TypeScript + handler logic
+
+---
+
+## Contract 7: Backward Compatibility
+
+### Requirement
+
+Changes must NOT break:
+- Skip Focus functionality (during focus sessions)
+- Reset button behavior
+- Pause/Resume buttons
+- Start button behavior
+- Existing session tracking
+- Existing localStorage persistence
+- Existing notification system
+
+### Verification
+
+Run existing test suite:
+- `tests/unit/hooks/useTimer.test.ts`
+- `tests/unit/hooks/useSessionTracking.test.ts`
+- `tests/integration/SettingsPersistence.test.tsx`
+
+All tests must pass without modification.
+
+---
+
+## Contract 8: Performance Requirements
+
+### Requirement 1: Button Visibility Calculation
+
+**Max Time**: < 1ms per render
+
+**Implementation**: Simple boolean expression, no loops or async
+
+---
+
+### Requirement 2: State Transition
+
+**Max Time**: < 50ms from click to UI update
+
+**Breakdown**:
+- Debounce check: < 1ms
+- Handler execution: < 5ms
+- switchMode + start: < 10ms
+- localStorage write: < 10ms
+- React re-render: < 30ms
+
+---
+
+### Requirement 3: localStorage Operations
+
+**Max Time**: < 10ms per write
+
+**Data Size**: ~200 bytes per state object
+
+**Frequency**: Every state change (acceptable for user actions)
+
+---
+
+## Summary
+
+This contract defines:
+
+1. **Button Visibility**: Skip Break shows for breaks (not idle), Skip Focus shows for running focus
+2. **Handler Behavior**: Skip break must call `switchMode('focus')` + `start()`, not just `skip()`
+3. **State Transitions**: Atomic transition from break to running focus (no intermediate states)
+4. **Session Tracking**: Skip break does NOT affect Pomodoro count or cycle position
+5. **Debouncing**: 500ms delay prevents duplicate actions
+6. **Persistence**: All state changes persist to localStorage
+7. **Backward Compatibility**: Existing functionality remains unchanged
+
+**Implementation Priority**: 
+1. Fix handleSkip to handle breaks correctly (highest priority)
+2. Update button visibility condition (required for fix to be accessible)
+3. Add tests (verification)
+4. Manual testing (final validation)

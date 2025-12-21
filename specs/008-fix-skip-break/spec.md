@@ -3,153 +3,161 @@
 **Feature Branch**: `008-fix-skip-break`  
 **Created**: December 21, 2025  
 **Status**: Draft  
-**Input**: User description: "On clicking Skip Focus, the timer is set to 00:00, but still stays in the Focus Time state. On clicking Skip Focus and when the focus timer finishes, the timer should switch to the Break state automatically. When the user clicks Start Break OR Start Focus, the timer starts automatically, there is no need to click Start Focus or Start Break additionally."
+**Input**: User description: "while break timer is in progress, if to click Skip Break button, break timer is reset to 00:00 and still stays in the break state: there is no button to start the next focus cycle. Instead of this behavior, on clicking Skip Break, the next Focus timer should start automatically."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Auto-Transition After Focus Complete (Priority: P1)
+### User Story 1 - Skip Break During Active Break Timer (Priority: P1)
 
-Users need the timer to automatically transition from focus to break state when a focus session completes, so they don't have to manually switch modes before starting their break.
+Users need to skip an active break timer and immediately start the next focus session, so they can maintain their workflow momentum without getting stuck in a non-functional state.
 
-**Why this priority**: This is the core fix for the broken behavior. Currently, completing a focus timer leaves users stuck in focus mode at 00:00, breaking the Pomodoro workflow. This is a critical usability issue that prevents the app from functioning as designed.
+**Why this priority**: This is the critical bug fix. Currently, clicking "Skip Break" while a break timer is running resets the timer to 00:00 but leaves the user stuck in break state with no way to start the next focus cycle. This completely breaks the Pomodoro workflow and forces users to reload the page or manually work around the issue.
 
-**Independent Test**: Complete a focus timer (let it reach 00:00) → Verify timer automatically switches to break mode (idle state, correct break duration) → Click "Start Break" button from Bug 3 UI → Verify break timer starts immediately without needing a second click.
+**Independent Test**: Start a break timer → Click "Skip Break" while break is running → Verify timer immediately switches to focus mode with full duration (25 minutes) and starts counting down automatically.
 
 **Acceptance Scenarios**:
 
-1. **Given** focus timer is running and reaches 00:00, **When** timer completes, **Then** timer automatically transitions to appropriate break mode (short-break or long-break) with correct duration and idle status
-2. **Given** focus timer just completed and transitioned to break mode, **When** user clicks "Start Break" button, **Then** break timer starts immediately (no additional click needed)
-3. **Given** timer completed and transitioned to break mode, **When** user refreshes page, **Then** timer remains in break mode (not focus mode) with idle status preserved
-4. **Given** user completes 4th focus session, **When** timer completes, **Then** timer automatically transitions to long-break mode (15 minutes), not short-break
+1. **Given** break timer is actively running (e.g., at 03:45 remaining), **When** user clicks "Skip Break" button, **Then** timer immediately switches to focus mode (25 minutes) and status changes to 'running' (starts counting down)
+2. **Given** user skipped an active break and focus timer started, **When** checking the timer display, **Then** focus timer shows correct duration (25:00 initially) and counts down normally
+3. **Given** user skipped break and focus timer is now running, **When** user refreshes the page, **Then** timer continues in focus mode from the correct remaining time
+4. **Given** user skipped break at 3rd cycle position, **When** new focus timer completes, **Then** system correctly moves to 4th cycle position (long break next)
 
 ---
 
-### User Story 2 - Auto-Transition After Skip Break (Priority: P2)
+### User Story 2 - Skip Break When Break is Pending (Priority: P2)
 
-Users need the timer to automatically transition from break to focus state when they skip a break, so they can immediately start a new focus session without manual mode switching.
+Users need to skip a pending (idle) break timer and immediately start the next focus session, providing a seamless transition without manual mode switching.
 
-**Why this priority**: Addresses the "Skip Break - Start Focus" button behavior from Bug 3. Currently, clicking this button may require two actions (skip + start). Users expect one click to both skip break and start focus timer running.
+**Why this priority**: Handles the case where a focus session just completed and the break is ready to start (idle state) but user wants to skip it. This is less critical than P1 because the break isn't actively running, but still important for complete skip functionality.
 
-**Independent Test**: Complete focus timer → Click "Skip Break - Start Focus" button → Verify timer automatically switches to focus mode AND starts running (25 minutes, countdown begins).
+**Independent Test**: Complete a focus timer (reaches 00:00) → Break timer is now pending/idle → Click "Skip Break" button → Verify timer switches to focus mode and starts running immediately (25 minutes, countdown begins).
 
 **Acceptance Scenarios**:
 
-1. **Given** focus timer completed and break is pending, **When** user clicks "Skip Break - Start Focus" button, **Then** timer immediately switches to focus mode (25 min) and starts running (no idle state)
-2. **Given** user skipped break and focus timer is running, **When** checking session count, **Then** completed Pomodoro count is correctly incremented (skip doesn't bypass tracking)
-3. **Given** user is on 3rd Pomodoro and skips break, **When** next focus completes, **Then** cycle correctly shows 4/4 (long break next)
-4. **Given** user skipped break and focus timer is running, **When** user refreshes page, **Then** timer continues running in focus mode from correct time
+1. **Given** break timer is in idle state (ready to start but not running), **When** user clicks "Skip Break" button, **Then** timer immediately switches to focus mode (25 min) and starts running (no manual start needed)
+2. **Given** user skipped idle break and focus started, **When** checking session tracking, **Then** completed Pomodoro count is correctly incremented (skip doesn't bypass session tracking)
+3. **Given** user skipped idle break, **When** focus timer starts, **Then** appropriate notification sound plays (if notifications enabled)
+4. **Given** user skipped idle break at 4th cycle position, **When** checking next break type, **Then** system correctly plans for long break after this focus completes
 
 ---
 
-### User Story 3 - Auto-Start After Start Break/Focus Click (Priority: P3)
+### User Story 3 - Session Tracking During Skip Break (Priority: P3)
 
-Users need break and focus timers to start immediately when they click "Start Break" or "Start Focus" buttons, eliminating the need for a second click after mode transition.
+Users need the session tracking system to correctly handle break skips, ensuring cycle positions and Pomodoro counts remain accurate regardless of whether breaks are completed or skipped.
 
-**Why this priority**: Improves user experience by reducing clicks. Currently functional (Bug 3 implementation may already handle this), but needs verification that no double-click is required. Lower priority because workaround exists (user can click Start if needed).
+**Why this priority**: Ensures data integrity for the Pomodoro tracking system. Lower priority because it's a supporting feature that doesn't block core workflow, but necessary for accurate statistics and correct long-break timing.
 
-**Independent Test**: Complete focus timer → Click "Start Break" button → Verify break timer is running immediately (not idle). Complete break timer → Click "Start Focus" from notification → Verify focus timer is running immediately (not idle).
+**Independent Test**: Complete 3 focus sessions (with or without breaks) → Skip the 3rd break → Verify cycle shows 4/4 → Complete 4th focus → Verify system offers long break (15 min) correctly.
 
 **Acceptance Scenarios**:
 
-1. **Given** focus completed and break pending (idle), **When** user clicks "Start Break" button, **Then** break timer starts running immediately (countdown begins, no additional Start click needed)
-2. **Given** break completed and focus pending (idle), **When** user clicks "Start Focus" from notification, **Then** focus timer starts running immediately (countdown begins)
-3. **Given** timer auto-started after button click, **When** user immediately clicks Pause, **Then** pause works correctly (timer was truly running, not idle)
-4. **Given** timer auto-started after button click, **When** user refreshes page mid-countdown, **Then** timer continues running from correct time (auto-start persists)
+1. **Given** user has completed 2 Pomodoros and is on 3rd break, **When** user skips the break, **Then** completed Pomodoro count shows 3 and cycle position shows 3/4
+2. **Given** user skipped multiple breaks during a cycle, **When** reaching 4th focus completion, **Then** system correctly offers long break (not short break)
+3. **Given** user skipped a break, **When** checking localStorage, **Then** session tracking data (completedPomodoros, cyclePosition) is correctly persisted
+4. **Given** user skipped break and focus is running, **When** user refreshes page, **Then** session tracking data (cycle position, count) is correctly restored
 
 ---
 
 ### Edge Cases
 
 - What happens if user clicks "Skip Break" multiple times rapidly?
-  - **Assumption**: System debounces click (ignore additional clicks) or only processes first click
-  
-- How does system handle refreshing page during auto-transition from focus to break?
-  - **Assumption**: localStorage saves the completed focus state, on restore the system re-checks and completes the transition to break mode
-  
-- What happens if user clicks "Skip Break" while break timer is already running (not idle)?
-  - **Assumption**: Skip only works when timer is idle or completed, not while running. If running, button should be disabled or hidden.
+  - **Assumption**: System debounces the button (disable after first click until transition completes) to prevent duplicate transitions
 
-- How does cycle tracking handle skipping breaks?
-  - **Assumption**: Skipping a break still counts as completing the Pomodoro cycle (cycle position increments), consistent with existing session tracking logic
+- What happens if break timer completes naturally (reaches 00:00) while user is about to click "Skip Break"?
+  - **Assumption**: Button should be disabled or hidden when timer reaches 00:00, only "Start Focus" button should be available
+
+- What happens if user clicks "Skip Break" while break timer is paused (status='paused', not 'running')?
+  - **Assumption**: Skip works from any break state (running, paused, or idle) - always transitions to running focus timer
+
+- How does system handle refreshing page immediately after clicking "Skip Break" (mid-transition)?
+  - **Assumption**: localStorage persistence captures the transition to focus mode + running status before the transition, so refresh shows focus timer running from full duration
+
+- What happens if user skips all breaks in a cycle - does long break timing still work?
+  - **Assumption**: Cycle position tracking is independent of break completion - skipping breaks doesn't affect when long break is offered (after 4th focus completion)
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST automatically switch timer mode from 'focus' to appropriate break mode ('short-break' or 'long-break') when focus timer reaches 00:00
-- **FR-002**: System MUST automatically switch timer mode from any break state to 'focus' when user clicks "Skip Break - Start Focus" button
-- **FR-003**: System MUST set timer status to 'idle' (not 'completed') after auto-transition from focus to break
-- **FR-004**: System MUST start timer running (status='running') immediately after user clicks "Start Break" button when timer is in idle break state
-- **FR-005**: System MUST start timer running (status='running') immediately after user clicks "Start Focus" button when timer is in idle focus state
-- **FR-006**: System MUST start timer running (status='running') immediately after user clicks "Skip Break - Start Focus" button (combines mode switch + start)
-- **FR-007**: System MUST preserve correct cycle position after skipping breaks (skip counts as completing cycle)
-- **FR-008**: System MUST persist auto-transition state changes to localStorage for page refresh recovery
-- **FR-009**: System MUST trigger session tracking increment (if needed) during auto-transition from focus to break
-- **FR-010**: System MUST use existing `switchMode()` function from `useTimer` hook for all mode transitions
+- **FR-001**: System MUST immediately transition timer from break mode to focus mode when user clicks "Skip Break" button (regardless of break timer status: running, paused, or idle)
+- **FR-002**: System MUST set timer status to 'running' (not 'idle') when transitioning from break to focus via "Skip Break" button
+- **FR-003**: System MUST set focus timer duration to full default value (25 minutes) when transitioning via "Skip Break"
+- **FR-004**: System MUST begin countdown immediately after "Skip Break" transition (no manual start action required)
+- **FR-005**: System MUST preserve cycle position and session tracking data when skip break occurs
+- **FR-006**: System MUST increment completed Pomodoro count appropriately when break is skipped (treat skip as completing the cycle)
+- **FR-007**: System MUST persist the skip transition state (mode=focus, status=running, duration=25min) to localStorage for page refresh recovery
+- **FR-008**: System MUST disable or debounce "Skip Break" button during transition to prevent duplicate actions
+- **FR-009**: System MUST trigger appropriate notifications (if enabled) when focus timer starts after skip break
+- **FR-010**: System MUST maintain correct long break timing (after 4th focus) even when breaks are skipped
 
 ### Technical Constraints
 
-- Must not break existing Bug 3 implementation (persistent break start UI)
-- Must not break existing Bug 2 implementation (completion tracking with sessionId)
-- Must not break existing Bug 1 implementation (timer state restoration accuracy)
-- Must reuse existing hooks and functions (`useTimer`, `switchMode`, `start`)
-- Timer state transitions must be atomic (mode + status + duration update together)
+- Must not break existing timer state management (mode, status, duration, remaining time)
+- Must not break existing session tracking (cycle position, completed count, sessionId)
+- Must not break existing localStorage persistence and restoration
+- Must reuse existing `useTimer` hook functions (`switchMode`, `start`, or equivalent)
+- Must work seamlessly with existing notification system (if enabled)
+- Button click must trigger atomic state transition (mode + status + duration update together)
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% of focus timer completions automatically transition to break mode (idle state with correct duration)
-- **SC-002**: 100% of "Skip Break" clicks immediately start focus timer running (no idle state, no second click needed)
-- **SC-003**: 100% of "Start Break" / "Start Focus" clicks immediately start timer running (no second click required)
-- **SC-004**: Timer mode and status persist correctly across page refreshes during auto-transition states
-- **SC-005**: User Story 1, 2, and 3 acceptance scenarios all pass manual testing
-- **SC-006**: Zero regressions in existing Bugs 1-3 fixes (timer accuracy, completion tracking, persistent UI)
-- **SC-007**: Cycle position and session count remain accurate after skip break operations
+- **SC-001**: 100% of "Skip Break" clicks during active break timer immediately transition to running focus timer (no stuck state at 00:00)
+- **SC-002**: 100% of "Skip Break" clicks from any break state (running, paused, idle) successfully start focus timer without manual intervention
+- **SC-003**: Focus timer displays correct full duration (25:00) and counts down properly after skip break action
+- **SC-004**: Cycle position and Pomodoro count remain accurate across multiple skip break operations (verified by correct long break timing after 4th focus)
+- **SC-005**: Timer state persists correctly across page refresh during and after skip break transition
+- **SC-006**: User Story 1, 2, and 3 acceptance scenarios all pass manual testing
+- **SC-007**: Zero regressions in existing timer functionality (pause, reset, mode switching, completion tracking, persistence)
 
 ## Scope *(mandatory)*
 
 ### In Scope
 
-- Auto-transition from focus complete (00:00) to break idle state
-- Auto-transition from break skip to focus running state
-- Auto-start timer on "Start Break" / "Start Focus" button clicks
-- Immediate start (no idle state) on "Skip Break - Start Focus" click
-- Preserve session tracking and cycle position during transitions
-- localStorage persistence of transition states
+- Fix "Skip Break" button to immediately transition from break to focus mode
+- Auto-start focus timer (status='running') when skip break is clicked
+- Handle skip break from any break state (running, paused, idle)
+- Preserve session tracking and cycle position during skip transitions
+- Persist skip transition state to localStorage for refresh recovery
+- Prevent duplicate transitions with button debouncing
 
 ### Out of Scope
 
-- Changing notification system behavior (notifications already implemented in Bug 3)
-- Adding undo/cancel for skip break action
-- Customizing auto-transition behavior (e.g., optional manual transition)
-- Multi-tab sync for transition states
-- Transition animations or sound effects (beyond existing notification sounds)
-- Break reminder if user ignores break pending state
+- Changing break notification system behavior (use existing notifications)
+- Adding undo/revert for skip break action
+- Implementing skip focus functionality (not mentioned in requirement)
+- Adding confirmation dialog before skip break
+- Customizing skip behavior (e.g., optional auto-start vs manual start)
+- Multi-tab synchronization of skip actions
+- Transition animations or special sound effects for skip action
+- Analytics or logging of skip frequency
 
 ## Assumptions *(mandatory)*
 
-1. **Bug 3 implemented**: Persistent "Start Break" and "Skip Break - Start Focus" buttons already exist in UI (from Bug 3 implementation)
-2. **Existing functions available**: `useTimer` hook exposes `switchMode()` and `start()` functions that can be called sequentially
-3. **localStorage working**: Timer state persistence (from Bug 1/2/6) correctly saves and restores mode, status, duration
-4. **Session tracking exists**: `useSessionTracking` hook correctly tracks cycle position and completed count
-5. **Mode switch resets timer**: Calling `switchMode(newMode)` already sets duration to default for that mode and status to 'idle'
-6. **Start function works**: Calling `start()` changes status from 'idle' to 'running' and begins countdown
-7. **Completion handler timing**: The completion handler (where auto-transition occurs) runs before UI updates, allowing seamless transition
-8. **One timer at a time**: User cannot have multiple timers running simultaneously (single global timer state)
+1. **"Skip Break" button exists**: A UI button labeled "Skip Break" or similar is already present in the interface when timer is in break mode
+2. **Timer hook provides functions**: The `useTimer` hook exposes functions for mode switching (e.g., `switchMode(mode)`) and starting timer (e.g., `start()`)
+3. **Session tracking hook exists**: A `useSessionTracking` hook or similar tracks cycle position and completed Pomodoro count
+4. **localStorage persistence works**: Timer state changes are automatically persisted to localStorage and restored on page load
+5. **Mode switch behavior**: Calling mode switch function sets the new mode and updates duration to default for that mode
+6. **Start function behavior**: Calling start function changes status from any state to 'running' and begins countdown
+7. **Sequential function calls**: Functions can be called sequentially (switchMode then start) within the same event handler to achieve desired state transition
+8. **Notification system exists**: System can trigger notifications when timers start (if user has enabled notifications)
+9. **Single timer instance**: Only one timer can be active at a time (no concurrent focus and break timers)
 
 ## Dependencies *(mandatory)*
 
-- **Bug 3 implementation**: Persistent break start UI provides the "Skip Break - Start Focus" button
-- **Bug 2 implementation**: Completion tracking ensures transitions don't trigger duplicate session increments
-- **Bug 1 implementation**: Timer state restoration ensures transitions persist across refreshes
-- **useTimer hook**: Provides `switchMode()` and `start()` functions for state management
-- **useSessionTracking hook**: Tracks cycle position to determine short vs long break
+- **useTimer hook**: Provides state management functions for mode switching and timer control
+- **useSessionTracking hook**: Tracks Pomodoro cycle position and completion count for correct break type determination
+- **localStorage utilities**: Handles persistence and restoration of timer state across page refreshes
+- **Notification system**: Triggers audio/visual notifications when timers start (if user enabled notifications)
+- **Existing timer UI**: "Skip Break" button component that triggers the skip action
 
 ## Technical Constraints *(optional - remove if not applicable)*
 
-- Must maintain React hooks patterns (useCallback for event handlers)
-- State updates must be sequential (switchMode → start) not batched, to ensure correct state transitions
-- localStorage writes must complete before page unload during transitions
-- Auto-transition logic must run in completion handler (useEffect or timer interval completion callback)
+- State transitions must be atomic and synchronous to prevent race conditions
+- Button must be disabled/debounced during transition to prevent duplicate clicks
+- localStorage writes must complete before page navigation/refresh
+- Must work with existing React hooks patterns and state management
+- Must not introduce memory leaks or unnecessary re-renders
 

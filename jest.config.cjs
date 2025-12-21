@@ -22,12 +22,18 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: {
-        jsx: 'react-jsx',
+        jsx: 'react',
+        esModuleInterop: true,
       },
     }],
   },
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
   },
 }
 

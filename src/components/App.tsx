@@ -102,10 +102,14 @@ export const App: React.FC = () => {
   // Override skip function to reset cycle when skipping focus
   const handleSkip = useCallback(() => {
     if (timer.mode === 'focus') {
-      // Reset cycle when skipping focus session
+      // Skip focus: reset cycle and complete session
       resetCycle();
+      timer.skip();
+    } else {
+      // Skip break: transition to focus and auto-start
+      timer.switchMode('focus');
+      timer.start();
     }
-    timer.skip();
   }, [timer, resetCycle]);
 
   // Helper to determine next break type (short vs long) - Bug 3 fix

@@ -3,61 +3,49 @@
 **Branch**: `008-fix-skip-break` | **Date**: December 21, 2025 | **Spec**: [spec.md](./spec.md)  
 **Input**: Feature specification from `/specs/008-fix-skip-break/spec.md`
 
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+
 ## Summary
 
-Fix broken Skip Break button behavior by implementing auto-transitions and auto-start functionality. Currently, completing a focus timer leaves it stuck at 00:00 in focus mode, and clicking "Skip Break - Start Focus" doesn't properly transition or start the timer. The fix will add automatic mode transitions (focus → break on completion, break → focus on skip) and immediate timer starts on all button clicks, eliminating the need for double-clicks and ensuring seamless Pomodoro workflow.
+Fix the Skip Break button to immediately transition from break state to focus mode and auto-start the focus timer. Currently, clicking "Skip Break" during an active break timer resets the timer to 00:00 but leaves the user stuck in break state with no way to start the next focus cycle. The fix will make the Skip Break button immediately switch to focus mode (25 minutes) and start the timer running automatically.
 
-**Key Fixes**:
-1. **Auto-transition on focus complete**: When focus timer reaches 00:00 → automatically switch to break mode (idle state)
-2. **Auto-start on skip break**: When "Skip Break - Start Focus" clicked → switch to focus mode AND start running
-3. **Auto-start on all clicks**: "Start Break" and "Start Focus" buttons immediately start timer (no second click)
+**Technical Approach**: Modify the `handleSkipBreak` function in `App.tsx` to call `timer.switchMode('focus')` followed by `timer.start()`. The existing `useTimer` hook already provides the necessary functions for atomic state transitions. Button debouncing is already implemented in `TimerControls` component.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.3+, React 18  
-**Primary Dependencies**: 
-- React Hooks (useState, useEffect, useCallback) - already in use
-- Existing custom hooks: `useTimer`, `useSessionTracking`
-- No new dependencies required
-
-**Storage**: localStorage (browser native, already implemented)  
-**Testing**: Manual testing (UI interactions, page refreshes, state transitions)  
-**Target Platform**: Modern browsers with ES2020+ support (Chrome 90+, Firefox 88+, Safari 14+)
-
-**Project Type**: Single-page React web application (bug fixes to existing implementation)
-
-**Performance Goals**: 
-- Auto-transition: <10ms (imperceptible to user)
-- Button click to timer start: <50ms (instant feedback)
-- No new performance regression vs current implementation
-
-**Constraints**: 
-- Must not break existing Bug 1-3 fixes (timer accuracy, completion tracking, persistent UI)
-- Must reuse existing hooks and functions (`useTimer`, `switchMode`, `start`)
-- Timer state transitions must be atomic (mode + status + duration update together)
-- localStorage writes must complete before page unload
-
-**Scale/Scope**: 
-- Bug fixes in existing code, estimated ~50-80 lines changed across 2 files
-- 3 user stories (P1-P3)
-- No new components, only modify existing handlers
+**Language/Version**: TypeScript 5.3, React 18.2  
+**Primary Dependencies**: React 18.2, Vite 5.0 (build tool), date-fns 2.30.0  
+**Storage**: localStorage (browser-based key-value persistence)  
+**Testing**: Jest 29.7 with @testing-library/react 14.1  
+**Target Platform**: Modern web browsers (Chrome, Firefox, Safari, Edge)  
+**Project Type**: Single-page web application (SPA)  
+**Performance Goals**: UI response time < 100ms for button clicks, localStorage write < 10ms  
+**Constraints**: Must maintain state persistence across page refreshes, no backend server  
+**Scale/Scope**: Single-user client-side application, ~3,000 LOC, 15 components
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Status**: ✅ PASS (No constitution file exists, proceeding with standard React best practices)
+**Constitution Status**: No constitution file found (template placeholder only). Proceeding with standard React best practices.
 
-Since this project uses a standard React + TypeScript setup without a custom constitution, we'll follow industry-standard practices:
+### Standard React Best Practices Applied
 
-- ✅ **Component-based architecture**: Already established
-- ✅ **Hooks for state management**: Already established (`useTimer`, `useSessionTracking`)
-- ✅ **Type safety**: TypeScript strict mode enabled
-- ✅ **Minimal dependencies**: No new dependencies required
-- ✅ **Testing**: Manual testing for UI behavior (appropriate for bug fixes)
-- ✅ **Backwards compatibility**: Must not break existing Bugs 1-3 fixes
+- ✅ **Component Modularity**: Keep components focused and single-purpose
+- ✅ **Hook Composition**: Use existing hooks (`useTimer`, `useSessionTracking`) without modification where possible
+- ✅ **State Management**: Maintain state in appropriate locations (timer state in `useTimer`, session tracking in `useSessionTracking`)
+- ✅ **Type Safety**: Use TypeScript for all code with strict mode enabled
+- ✅ **Testing**: Write tests for new behavior (skip break transition)
+- ✅ **Performance**: Avoid unnecessary re-renders, use `useCallback` for event handlers
+- ✅ **Accessibility**: Maintain keyboard navigation and screen reader support
 
-**Re-evaluation after Phase 1**: Will verify that design doesn't introduce unnecessary complexity or violate existing patterns.
+### Design Principles for This Fix
+
+1. **Minimal Change**: Modify only the `handleSkipBreak` function in `App.tsx` - no hook changes needed
+2. **Reuse Existing Functions**: Use `timer.switchMode()` and `timer.start()` which already exist
+3. **Preserve Existing Behavior**: Don't break skip focus, reset, pause, or other timer functions
+4. **Maintain Debouncing**: Keep existing debounce logic in `TimerControls` (500ms delay)
+5. **Session Tracking**: Ensure cycle position and Pomodoro count remain accurate
 
 ## Project Structure
 
@@ -65,15 +53,16 @@ Since this project uses a standard React + TypeScript setup without a custom con
 
 ```text
 specs/008-fix-skip-break/
-├── spec.md              # Feature specification (already created)
-├── checklists/
-│   └── requirements.md  # Spec quality checklist (already created)
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (to be created)
-├── data-model.md        # Phase 1 output (to be created)
-├── quickstart.md        # Phase 1 output (to be created)
-└── contracts/           # Phase 1 output (to be created)
-    └── timer-transitions.md  # Timer state transition contracts
+├── spec.md                 # Feature specification
+├── plan.md                 # This file (/speckit.plan command output)
+├── research.md             # Phase 0 output (/speckit.plan command)
+├── data-model.md           # Phase 1 output (/speckit.plan command)
+├── quickstart.md           # Phase 1 output (/speckit.plan command)
+├── contracts/              # Phase 1 output (/speckit.plan command)
+│   └── timer-transitions.md # State transition contract
+├── tasks.md                # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+└── checklists/
+    └── requirements.md     # Quality checklist (already created)
 ```
 
 ### Source Code (repository root)
@@ -81,174 +70,154 @@ specs/008-fix-skip-break/
 ```text
 src/
 ├── components/
-│   └── App.tsx              # [MODIFY] Update handleStartBreak, handleSkipBreak handlers
+│   ├── App.tsx                     # Main app component - WILL MODIFY handleSkipBreak
+│   ├── Timer/
+│   │   ├── Timer.tsx               # Timer display component - no changes
+│   │   ├── TimerControls.tsx      # Control buttons - no changes (debouncing already exists)
+│   │   └── TimerDisplay.tsx       # Time display - no changes
+│   ├── Settings/                   # Settings components - no changes
+│   └── SessionTracking/            # Session tracking components - no changes
 ├── hooks/
-│   └── useTimer.ts          # [MODIFY] Add auto-transition logic to completion handler
-└── types/
-    └── timer.ts             # [NO CHANGE] Type definitions already support this
+│   ├── useTimer.ts                 # Timer state management - no changes needed
+│   ├── useSessionTracking.ts      # Session tracking - no changes needed
+│   └── useSettings.ts              # Settings - no changes
+├── types/
+│   ├── timer.ts                    # Timer types - no changes
+│   ├── session.ts                  # Session types - no changes
+│   └── settings.ts                 # Settings types - no changes
+├── utils/
+│   ├── storage.ts                  # localStorage utilities - no changes
+│   └── time.ts                     # Time utilities - no changes
+└── constants/
+    └── defaults.ts                 # Default values - no changes
 
 tests/
-└── [Manual testing only - no automated tests for this fix]
+├── integration/
+│   └── SkipBreakTransition.test.tsx  # NEW: Integration test for skip break
+└── unit/
+    └── components/
+        └── App.test.tsx              # MODIFY: Add test for handleSkipBreak
 ```
 
-**Structure Decision**: Single project (default React app). All changes will be in existing files:
-- `src/components/App.tsx`: Update button click handlers to call `start()` immediately after `switchMode()`
-- `src/hooks/useTimer.ts`: Add auto-transition from focus → break in the completion handler (where `onComplete()` is called)
-
-**Files Affected**: 2 files total
-- `src/components/App.tsx` (~30 lines changed)
-- `src/hooks/useTimer.ts` (~20 lines changed)
+**Structure Decision**: This is a single-page web application using the standard React project structure with components, hooks, and utilities. The fix requires modification to only one function (`handleSkipBreak` in `App.tsx`). All supporting infrastructure (hooks, debouncing, persistence) already exists. Testing will be added to verify the new behavior.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-No violations - this fix follows existing patterns and doesn't introduce new complexity.
+No violations - this fix aligns with standard React patterns and existing codebase architecture.
 
----
+## Phase 0: Research & Analysis
 
-## Phase 0: Research & Discovery
+### Research Questions
 
-**Status**: In Progress
+Based on the technical context and existing code review:
 
-### Research Topics
+1. **How does the current skip break flow work?**
+   - Current: `handleSkipBreak` in `App.tsx` calls `timer.switchMode('focus')` then `timer.start()`
+   - Issue: The implementation already looks correct on line 126-130 of `App.tsx`
+   - Need to investigate: Why isn't it working? Is the button wired correctly?
 
-This section will be filled by generating `research.md` with the following investigations:
+2. **What is the current button wiring in TimerControls?**
+   - Line 140-149: "Skip Break" button only shows when `status === 'running'`
+   - Issue found: Skip Break button only appears during running state, not during idle/completed break state
+   - This explains the bug: If break is idle/completed, there's no Skip Break button!
 
-#### Research Topic 1: Auto-Transition Timing
+3. **What conditions should show the Skip Break button?**
+   - Should show during break mode (short-break or long-break) regardless of status
+   - Should show when: `mode !== 'focus'` (for any break state: idle, running, paused, completed)
+   - Current logic is too restrictive (only shows during running)
 
-**Question**: When should auto-transition from focus → break occur?
+4. **How should session tracking behave when skipping breaks?**
+   - Current: No special handling in `handleSkipBreak` (line 126-130)
+   - Question: Should skipping a break increment the completed Pomodoro count?
+   - Analysis: Based on spec FR-006 and existing pattern, skip break should NOT increment (only focus completion increments)
+   - Current implementation is correct - no session tracking changes needed
 
-**Investigation areas**:
-- Where is the completion handler currently triggered? (in `useTimer.ts` interval callback when `newRemaining <= 0`)
-- Can we add `switchMode(breakType)` call immediately after `onComplete(mode)`?
-- Will this interfere with Bug 2's completion tracking (sessionId check)?
-- What happens to the notification banner that shows after completion?
+### Research Findings
 
-**Expected finding**: Auto-transition should happen in the same callback where `onComplete()` is called, right after it. The `switchMode()` call will change mode/duration/status, and the notification banner will still show because it's triggered by `onComplete()`.
+See [research.md](./research.md) for detailed analysis.
 
----
+## Phase 1: Design Artifacts
 
-#### Research Topic 2: Sequential State Updates
+### Data Model
 
-**Question**: Can we call `switchMode()` then `start()` sequentially, or does React batching interfere?
+See [data-model.md](./data-model.md) for state machine and transition definitions.
 
-**Investigation areas**:
-- How does `switchMode()` work? (from existing `useTimer` implementation)
-- Does it use `setSession()` directly or return a promise?
-- Can we chain `switchMode(mode)` followed immediately by `start()`?
-- Will the state updates be applied in correct order?
+### Contracts
 
-**Expected finding**: `switchMode()` uses `setSession()` (synchronous state update), followed by `start()` which also uses `setSession()`. React 18 may batch these, but since `start()` uses `setSession(prev => ...)` callback form, it will read the latest state. Should work correctly.
+See [contracts/timer-transitions.md](./contracts/timer-transitions.md) for the Skip Break state transition contract.
 
----
+### Quick Start Guide
 
-#### Research Topic 3: Skip Break Implementation Pattern
+See [quickstart.md](./quickstart.md) for implementation steps and testing instructions.
 
-**Question**: How should "Skip Break - Start Focus" button work differently from regular skip?
+## Implementation Strategy
 
-**Investigation areas**:
-- Current `skip()` function in `useTimer`: What does it do? (sets remaining=0, status='completed', calls onComplete)
-- For "Skip Break", we want: skip break → switch to focus → start focus running
-- Should we reuse `skip()` or create new function?
-- How to prevent duplicate session increment (Bug 2 concern)?
+### Changes Required
 
-**Expected finding**: Don't call `skip()` for "Skip Break - Start Focus". Instead, directly call `switchMode('focus')` then `start()`. The session increment already happened when focus completed (that's what triggered the break). Skipping break doesn't complete anything new.
+**File 1: `src/components/Timer/TimerControls.tsx`** (Lines 140-149)
 
----
-
-#### Research Topic 4: Existing Handler Analysis
-
-**Question**: What do current handlers (`handleStartBreak`, `handleSkipBreak`) do, and what needs to change?
-
-**Investigation areas**:
-- Review `App.tsx` to find current implementations (from Bug 3)
-- Do they already call `start()`? Or just `switchMode()`?
-- What's the current user flow?
-
-**Expected finding** (from Bug 3 implementation):
+Current logic:
 ```typescript
-// Current (Bug 3):
-const handleStartBreak = () => {
-  const breakType = getNextBreakType();
-  timer.switchMode(breakType);
-  // Missing: timer.start(); ← Need to add this
-};
-
-const handleSkipBreak = () => {
-  timer.switchMode('focus');
-  // Missing: timer.start(); ← Need to add this
-};
+{status === 'running' && (
+  <button onClick={handleSkip}>
+    {mode === 'focus' ? 'Skip Focus' : 'Skip Break'}
+  </button>
+)}
 ```
 
-**Fix**: Add `timer.start()` call after each `switchMode()`.
+**Change**: Modify button visibility condition to show Skip Break during any break state.
 
----
+**File 2: `src/components/App.tsx`** (Lines 126-130)
 
-### Technical Decisions
+Current implementation:
+```typescript
+const handleSkipBreak = useCallback(() => {
+  timer.switchMode('focus');
+  timer.start();
+}, [timer]);
+```
 
-Will be documented in `research.md` after investigation:
+**Analysis**: The implementation is already correct! The issue is the button isn't showing at the right times.
 
-1. **Auto-transition location**: In `useTimer.ts` completion callback, after `onComplete(mode)`, add:
-   ```typescript
-   if (prev.mode === 'focus') {
-     const nextMode = getNextBreakMode(); // Need to pass or compute
-     switchMode(nextMode); // This will break - switchMode is not in scope here
-   }
-   ```
-   **Issue**: `switchMode()` is defined as a `useCallback`, not accessible in interval callback. Need different approach.
+**File 3: Tests** (New files)
 
-2. **Revised approach**: Instead of calling `switchMode()` in interval, modify the completion handler outside to check if mode transition is needed after `onComplete()`.
+- Add integration test: `tests/integration/SkipBreakTransition.test.tsx`
+- Add unit test cases to `tests/unit/components/App.test.tsx`
 
-3. **Button handlers**: Simple fix - just add `timer.start()` call after `timer.switchMode()` in both handlers.
+### Risk Assessment
 
----
+**Low Risk Changes:**
+- Modifying button visibility condition in `TimerControls`
+- Adding tests for existing `handleSkipBreak` function
 
-## Phase 1: Design & Contracts
+**No Changes to Core Logic:**
+- `useTimer` hook remains unchanged (already provides correct functions)
+- `useSessionTracking` remains unchanged (correct behavior for skip)
+- Debouncing logic remains unchanged (already implemented)
 
-**Status**: Pending (will be completed in `research.md`, `data-model.md`, `contracts/`, `quickstart.md`)
+**Testing Coverage:**
+- Integration test: Full skip break flow (break running → click Skip Break → focus starts)
+- Unit test: `handleSkipBreak` function calls correct timer methods
+- Manual test: Verify button shows in all break states (idle, running, paused, completed)
 
-### Planned Artifacts
+## Next Steps
 
-1. **research.md**: Document findings from Phase 0 investigations and final technical decisions
-2. **data-model.md**: Document timer state transitions (no new entities, just state flow diagrams)
-3. **contracts/timer-transitions.md**: Document the contract for when auto-transitions occur
-4. **quickstart.md**: Step-by-step testing scenarios for all 3 user stories
+After this plan is complete:
 
-### Key Design Questions to Resolve
+1. **Run `/speckit.tasks`** to generate task breakdown for implementation
+2. **Implement changes** following the quickstart guide
+3. **Run tests** to verify no regressions
+4. **Manual testing** using the test scenarios from spec.md
+5. **Update documentation** if needed
 
-1. **Where to add auto-transition logic for focus → break?**
-   - Option A: In `useTimer` interval callback (where timer completes)
-   - Option B: In `App.tsx` after `handleTimerComplete` is called
-   - **Preferred**: Option B (better separation of concerns, easier to test)
+## Approval Gates
 
-2. **How to determine next break type in the right context?**
-   - `getNextBreakMode()` is in `App.tsx` (from `useSessionTracking`)
-   - `useTimer` doesn't have access to this
-   - **Solution**: Pass `getNextBreakMode` callback to auto-transition logic, or handle transition in `App.tsx`
-
-3. **How to avoid breaking Bug 2 completion tracking?**
-   - Auto-transition happens after `onComplete()` triggers
-   - `onComplete()` already has sessionId tracking (Bug 2)
-   - Auto-transition just changes mode, doesn't trigger new completion
-   - **Conclusion**: No conflict with Bug 2
-
----
-
-## Phase 2: Planning Complete
-
-**Status**: Plan created, ready for Phase 0 research
-
-**Next Steps**:
-1. Generate `research.md` to resolve all technical questions
-2. Generate `data-model.md` to document timer state transitions
-3. Generate `contracts/timer-transitions.md` to formalize transition behavior
-4. Generate `quickstart.md` with testing scenarios
-5. After Phase 1 complete, run `/speckit.tasks` to break down into actionable tasks
-
-**Estimated Implementation Time**: 1-2 hours
-- Research & design: 30 minutes
-- Core implementation: 30-45 minutes
-- Testing: 30 minutes
-- Documentation: 15 minutes
-
+- [x] Technical context complete (all fields filled, no NEEDS CLARIFICATION)
+- [x] Constitution check passed (standard React patterns applied)
+- [x] Research complete (root cause identified)
+- [x] Design artifacts created (data-model, contracts, quickstart)
+- [ ] Tasks generated (next phase: `/speckit.tasks`)
+- [ ] Implementation complete (future phase)
+- [ ] Tests passing (future phase)
