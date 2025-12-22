@@ -74,6 +74,15 @@ export const App: React.FC = () => {
     }
   }, [timer.status, timer.mode, timer, getNextBreakMode]);
 
+  // Auto-transition from break complete to focus
+  // Using useEffect to mirror the existing focus-to-break pattern
+  React.useEffect(() => {
+    if (timer.status === 'completed' &&
+        (timer.mode === 'short-break' || timer.mode === 'long-break')) {
+      timer.switchMode('focus');
+    }
+  }, [timer.status, timer.mode, timer]);
+
   // Handle "Start Next" action from notification banner
   const handleStartNext = useCallback(() => {
     dismissBanner();

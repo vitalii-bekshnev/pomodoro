@@ -136,5 +136,56 @@ describe('App - Skip Break Functionality', () => {
       expect(screen.getByText('Pause')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
+
+  test('Break completion automatically transitions to focus mode', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // Start focus timer
+    const startButton = screen.getByText('Start Focus');
+    await user.click(startButton);
+
+    // Wait for timer to be running
+    await waitFor(() => {
+      expect(screen.getByText('Pause')).toBeInTheDocument();
+    });
+
+    // Skip to trigger break (fast-forward to break state)
+    const skipFocusButton = screen.getByText('Skip Focus');
+    await user.click(skipFocusButton);
+
+    // Wait for break state
+    await waitFor(() => {
+      const startBreakButtons = screen.queryAllByText(/Start.*Break/i);
+      expect(startBreakButtons.length).toBeGreaterThan(0);
+    }, { timeout: 3000 });
+
+    // Start break timer
+    const startBreakButton = screen.getByText(/Start.*Break/);
+    await user.click(startBreakButton);
+
+    // Wait for break to be running
+    await waitFor(() => {
+      expect(screen.getByText('Pause')).toBeInTheDocument();
+    });
+
+    // Let break timer complete by advancing time (5 minutes = 300000ms)
+    // Use a slightly longer time to ensure completion
+    await waitFor(() => {
+      // Advance timers to complete the break (5+ minutes to ensure completion)
+      jest.advanceTimersByTime(320000);
+    }, { timeout: 1000 });
+
+    // After break completion, verify automatic transition to focus mode
+    await waitFor(() => {
+      // Timer should automatically switch to focus mode showing 25:00
+      expect(screen.getByText('25:00')).toBeInTheDocument();
+      // Focus timer should be ready to start (not running automatically)
+      expect(screen.getByText('Start Focus')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Skip Break button should no longer be visible
+    expect(screen.queryByText('Skip Break')).not.toBeInTheDocument();
+  });
 });
 
