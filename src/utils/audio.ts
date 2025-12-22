@@ -9,13 +9,23 @@ let focusCompleteAudio: HTMLAudioElement | null = null;
 let breakCompleteAudio: HTMLAudioElement | null = null;
 
 /**
+ * Get the base path from Vite's import.meta.env
+ * In development, this is usually '/', in production it respects the base config
+ */
+const getBasePath = (): string => {
+  // Vite sets import.meta.env.BASE_URL based on the base config
+  return import.meta.env.BASE_URL || '/';
+};
+
+/**
  * Initialize and pre-load audio files
  * Should be called on app mount
  */
 export const initializeAudio = (): void => {
   try {
-    focusCompleteAudio = new Audio('/sounds/focus-complete.mp3');
-    breakCompleteAudio = new Audio('/sounds/break-complete.mp3');
+    const basePath = getBasePath();
+    focusCompleteAudio = new Audio(`${basePath}sounds/focus-complete.mp3`);
+    breakCompleteAudio = new Audio(`${basePath}sounds/break-complete.mp3`);
 
     // Pre-load
     focusCompleteAudio.load();
