@@ -27,14 +27,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--spacing-lg);
   position: relative;
   max-width: 800px;
   margin: 0 auto;
 }
 
-.header-content > div {
-  /* flex: 1; */ /* Removed to allow true centering */
+.header-title-group {
+  position: relative;
+  display: inline-block;
+  /* Text is centered, logo will be positioned to the left */
+}
+
+.header-title-group .header-logo {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: var(--spacing-md);
 }
 
 .header-content .settings-button {

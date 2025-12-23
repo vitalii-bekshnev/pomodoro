@@ -8,6 +8,7 @@ import { NotificationBanner } from './Notifications/NotificationBanner';
 import { SessionCounter } from './SessionTracking/SessionCounter';
 import { CycleIndicator } from './SessionTracking/CycleIndicator';
 import { SettingsPanel } from './Settings/SettingsPanel';
+import { PomodoroLogo } from './Logo/PomodoroLogo';
 import { useTimer } from '../hooks/useTimer';
 import { useNotifications } from '../hooks/useNotifications';
 import { useSessionTracking } from '../hooks/useSessionTracking';
@@ -176,9 +177,12 @@ export const App: React.FC = () => {
       <main className="app-main">
         <header className="app-header">
           <div className="header-content">
-            <div>
-              <h1 className="app-title">Pomodoro Timer</h1>
-              <p className="app-subtitle">Focus. Work. Rest. Repeat.</p>
+            <div className="header-title-group">
+              <PomodoroLogo size={48} className="pomodoro-logo header-logo" />
+              <div>
+                <h1 className="app-title">Pomodoro Timer</h1>
+                <p className="app-subtitle">Focus. Work. Rest. Repeat.</p>
+              </div>
             </div>
             <button
               className="settings-button"

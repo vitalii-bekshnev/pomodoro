@@ -1,0 +1,34 @@
+/**
+ * PomodoroLogo styles
+ * Animations and hover effects for the SVG logo
+ */
+
+.pomodoro-logo {
+  display: inline-block;
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+/* Gentle pulsing animation */
+@keyframes gentle-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Logo in header context */
+.header-logo {
+  margin-right: 0.75rem;
+  vertical-align: middle;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Responsive sizing */
+@media (max-width: 768px) {
+  .header-logo {
+    margin-right: 0.5rem;
+  }
+}
+
