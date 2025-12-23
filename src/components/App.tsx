@@ -27,7 +27,6 @@ export const App: React.FC = () => {
     completedCount,
     cyclePosition,
     incrementSession,
-    resetCycle,
     getNextBreakMode,
   } = useSessionTracking();
 
@@ -41,7 +40,7 @@ export const App: React.FC = () => {
     dismissBanner,
   } = useNotifications(preferences.soundsEnabled);
 
-  // Handle timer completion
+  // Handle timer completion (defined before timer hook to avoid circular dependency)
   const handleTimerComplete = useCallback(
     (mode: TimerMode) => {
       // Update session tracking if focus session completed
@@ -56,32 +55,41 @@ export const App: React.FC = () => {
         playBreakComplete();
       }
 
-      // Show notification banner
-      showBanner(mode);
+      // Show notification banner only when auto-start is disabled
+      // (auto-start logic will be handled by a separate effect)
+      const shouldShowBanner =
+        (mode === 'focus' && !preferences.autoStartBreaks) ||
+        ((mode === 'short-break' || mode === 'long-break') && !preferences.autoStartFocus);
+
+      if (shouldShowBanner) {
+        showBanner(mode);
+      }
     },
-    [incrementSession, playFocusComplete, playBreakComplete, showBanner]
+    [incrementSession, playFocusComplete, playBreakComplete, showBanner, preferences.autoStartBreaks, preferences.autoStartFocus]
   );
 
   // Timer hook
   const timer = useTimer(preferences, handleTimerComplete);
 
-  // Auto-transition from focus complete to break (Bug 4 fix)
-  // Using useEffect to avoid circular dependency (handleTimerComplete needs timer, but timer needs handleTimerComplete)
+  // Auto-start logic: Check for auto-start after timer completion
   React.useEffect(() => {
-    if (timer.status === 'completed' && timer.mode === 'focus') {
-      const nextBreakMode = getNextBreakMode();
-      timer.switchMode(nextBreakMode);
+    if (timer.status === 'completed') {
+      // Auto-start focus: break completed and auto-start focus enabled
+      if ((timer.mode === 'short-break' || timer.mode === 'long-break') && preferences.autoStartFocus) {
+        dismissBanner();
+        timer.switchMode('focus');
+        timer.start();
+      }
+      // Auto-start breaks: focus completed and auto-start breaks enabled
+      else if (timer.mode === 'focus' && preferences.autoStartBreaks) {
+        dismissBanner();
+        const nextBreakMode = getNextBreakMode();
+        timer.switchMode(nextBreakMode);
+        timer.start();
+      }
     }
-  }, [timer.status, timer.mode, timer, getNextBreakMode]);
+  }, [timer.status, timer.mode, preferences.autoStartFocus, preferences.autoStartBreaks, dismissBanner, getNextBreakMode]);
 
-  // Auto-transition from break complete to focus
-  // Using useEffect to mirror the existing focus-to-break pattern
-  React.useEffect(() => {
-    if (timer.status === 'completed' &&
-        (timer.mode === 'short-break' || timer.mode === 'long-break')) {
-      timer.switchMode('focus');
-    }
-  }, [timer.status, timer.mode, timer]);
 
   // Handle "Start Next" action from notification banner
   const handleStartNext = useCallback(() => {
@@ -108,18 +116,27 @@ export const App: React.FC = () => {
     }
   }, [dismissBanner, completedMode, getNextBreakMode, timer, preferences]);
 
-  // Override skip function to reset cycle when skipping focus
+  // Override skip function to handle mode transitions
   const handleSkip = useCallback(() => {
     if (timer.mode === 'focus') {
-      // Skip focus: reset cycle and complete session
-      resetCycle();
-      timer.skip();
+      // Skip focus: manually handle completion without triggering auto-start loop
+      // Increment session count (focus was skipped but still counts)
+      incrementSession();
+      
+      // Play sound
+      playFocusComplete();
+      
+      // Get next break mode and switch, optionally auto-starting
+      const nextBreakMode = getNextBreakMode();
+      timer.switchMode(nextBreakMode, preferences.autoStartBreaks);
     } else {
-      // Skip break: transition to focus and auto-start
-      timer.switchMode('focus');
-      timer.start();
+      // Skip break: transition to focus
+      playBreakComplete();
+      
+      // Switch to focus mode, optionally auto-starting
+      timer.switchMode('focus', preferences.autoStartFocus);
     }
-  }, [timer, resetCycle]);
+  }, [timer, incrementSession, playFocusComplete, playBreakComplete, preferences.autoStartBreaks, preferences.autoStartFocus, getNextBreakMode]);
 
   // Helper to determine next break type (short vs long) - Bug 3 fix
   const getNextBreakType = useCallback((): 'short-break' | 'long-break' => {
@@ -182,7 +199,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Persistent break start option - Bug 3 fix */}
-        {timer.status === 'completed' && timer.mode === 'focus' && (
+        {timer.status === 'completed' && timer.mode === 'focus' && !preferences.autoStartBreaks && (
           <div className="break-pending-actions">
             <p className="break-pending-message">
               🎉 Focus session complete! Time for a break.

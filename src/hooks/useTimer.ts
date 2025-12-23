@@ -22,7 +22,8 @@ export interface UseTimerReturn {
   resume: () => void;
   reset: () => void;
   skip: () => void;
-  switchMode: (mode: TimerMode) => void;
+  skipManual: () => void; // Skip without triggering onComplete callback
+  switchMode: (mode: TimerMode, autoStart?: boolean) => void;
 }
 
 export function useTimer(
@@ -266,9 +267,35 @@ export function useTimer(
     });
   }, [session.mode, onComplete]);
 
+  // Skip current session without triggering onComplete callback
+  // Used for manual skip actions that handle their own transitions
+  const skipManual = useCallback(() => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    setSession((prev) => {
+      // Do NOT call onComplete - let caller handle transition
+      // Save completion record to track the skip (for session counting if needed)
+      setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
+        sessionId: prev.sessionId,
+        completedAt: Date.now(),
+        mode: prev.mode,
+      });
+      
+      return {
+        ...prev,
+        remaining: 0,
+        status: 'completed',
+        startedAt: null,
+      };
+    });
+  }, []);
+
   // Switch to a different mode
   const switchMode = useCallback(
-    (newMode: TimerMode) => {
+    (newMode: TimerMode, autoStart: boolean = false) => {
       if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -280,12 +307,57 @@ export function useTimer(
         mode: newMode,
         duration,
         remaining: duration,
-        status: 'idle',
-        startedAt: null,
+        status: autoStart ? 'running' : 'idle',
+        startedAt: autoStart ? Date.now() : null,
         sessionId: `${Date.now()}-${newMode}`, // Generate new session ID on mode switch
       });
+
+      // If autoStart is true, start the interval
+      if (autoStart) {
+        startTimeRef.current = Date.now();
+        elapsedRef.current = 0;
+
+        intervalRef.current = window.setInterval(() => {
+          if (startTimeRef.current === null) return;
+
+          const now = Date.now();
+          const totalElapsed = elapsedRef.current + (now - startTimeRef.current);
+          const newRemaining = Math.max(0, duration - totalElapsed);
+
+          setSession((prev) => {
+            if (newRemaining <= 0) {
+              if (intervalRef.current !== null) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              
+              // Call onComplete callback
+              onComplete(prev.mode);
+              
+              // Save completion record to prevent duplicate processing on refresh (Bug 2 fix)
+              setStorageItem(STORAGE_KEYS.LAST_COMPLETION, {
+                sessionId: prev.sessionId,
+                completedAt: Date.now(),
+                mode: prev.mode,
+              });
+
+              return {
+                ...prev,
+                remaining: 0,
+                status: 'completed',
+                startedAt: null,
+              };
+            }
+
+            return {
+              ...prev,
+              remaining: newRemaining,
+            };
+          });
+        }, 100); // Update every 100ms for smooth countdown
+      }
     },
-    [preferences]
+    [preferences, onComplete]
   );
 
   return {
@@ -299,6 +371,7 @@ export function useTimer(
     resume,
     reset,
     skip,
+    skipManual,
     switchMode,
   };
 }
