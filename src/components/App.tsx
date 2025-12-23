@@ -77,18 +77,16 @@ export const App: React.FC = () => {
       // Auto-start focus: break completed and auto-start focus enabled
       if ((timer.mode === 'short-break' || timer.mode === 'long-break') && preferences.autoStartFocus) {
         dismissBanner();
-        timer.switchMode('focus');
-        timer.start();
+        timer.switchMode('focus', true); // Use autoStart parameter
       }
       // Auto-start breaks: focus completed and auto-start breaks enabled
       else if (timer.mode === 'focus' && preferences.autoStartBreaks) {
         dismissBanner();
         const nextBreakMode = getNextBreakMode();
-        timer.switchMode(nextBreakMode);
-        timer.start();
+        timer.switchMode(nextBreakMode, true); // Use autoStart parameter
       }
     }
-  }, [timer.status, timer.mode, preferences.autoStartFocus, preferences.autoStartBreaks, dismissBanner, getNextBreakMode]);
+  }, [timer.status, timer.mode, preferences.autoStartFocus, preferences.autoStartBreaks, dismissBanner, getNextBreakMode, timer]);
 
 
   // Handle "Start Next" action from notification banner
