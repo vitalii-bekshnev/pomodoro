@@ -1,8 +1,28 @@
+# Documentation and specs
+specs/
+
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
 build/
-coverage/
-*.log
-.env*
-!.env.example
 
+# Coverage reports
+coverage/
+
+# Cache directories
+.cache/
+*.tsbuildinfo
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
