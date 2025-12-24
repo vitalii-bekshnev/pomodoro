@@ -18,44 +18,6 @@ export interface TimerProps extends UseTimerReturn {
   settingsButton?: React.ReactNode;
 }
 
-/**
- * Time format for display
- */
-export interface TimeFormat {
-  minutes: string;
-  seconds: string;
-  centiseconds?: string;
-}
-
-/**
- * Format milliseconds to time display components
- * 
- * @param ms - Time in milliseconds
- * @param includeCentiseconds - Whether to include centiseconds (hundredths of a second)
- * @returns Formatted time object with padded strings
- * 
- * @example
- * formatTime(125450, false); // { minutes: '02', seconds: '05' }
- * formatTime(125450, true);  // { minutes: '02', seconds: '05', centiseconds: '45' }
- */
-export function formatTime(ms: number, includeCentiseconds: boolean = false): TimeFormat {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  const result: TimeFormat = {
-    minutes: minutes.toString().padStart(2, '0'),
-    seconds: seconds.toString().padStart(2, '0'),
-  };
-
-  if (includeCentiseconds) {
-    const centiseconds = Math.floor((ms % 1000) / 10);
-    result.centiseconds = centiseconds.toString().padStart(2, '0');
-  }
-
-  return result;
-}
-
 export const Timer: React.FC<TimerProps> = ({
   mode,
   remaining,

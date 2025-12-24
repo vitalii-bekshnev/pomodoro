@@ -6,10 +6,9 @@
 
 import React from 'react';
 import { TimerMode } from '../../types/timer';
-import { formatTime } from '../../utils/time';
+import { formatTime, formatTimeWithCentiseconds } from '../../utils/time';
 import { getThemeForMode } from '../../styles/theme';
 import { TimerDigit } from './TimerDigit';
-import { formatTime as formatTimeWithCS } from './Timer';
 import './TimerDisplay.css';
 
 export interface TimerDisplayProps {
@@ -24,7 +23,7 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = React.memo(
 
     // Big View mode: Use TimerDigit components with centiseconds
     if (bigViewEnabled) {
-      const { minutes, seconds, centiseconds } = formatTimeWithCS(remaining, true);
+      const { minutes, seconds, centiseconds } = formatTimeWithCentiseconds(remaining, true);
 
       return (
         <div
