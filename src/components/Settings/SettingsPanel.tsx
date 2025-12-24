@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { UserPreferences, DURATION_CONSTRAINTS } from '../../types/settings';
 import { DurationSlider } from './DurationSlider';
 import { ToggleSwitch } from './ToggleSwitch';
+import { ThemeToggle } from './ThemeToggle';
 import './SettingsPanel.css';
 
 export interface SettingsPanelProps {
@@ -183,6 +184,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
               </div>
             )}
+          </section>
+
+          {/* Theme Section */}
+          <section className="settings-section">
+            <h3 className="section-title">Appearance</h3>
+            
+            <ThemeToggle />
           </section>
         </div>
 
