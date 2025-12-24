@@ -17,9 +17,9 @@
 
 **Purpose**: Prepare type definitions and constants needed across all user stories
 
-- [ ] T001 [P] Add `bigViewEnabled: boolean` field to `UserPreferences` interface in `src/types/settings.ts`
-- [ ] T002 [P] Add `bigViewEnabled: false` to `DEFAULT_PREFERENCES` constant in `src/types/settings.ts`
-- [ ] T003 [P] Update `validatePreferences` function in `src/types/settings.ts` to include bigViewEnabled with default value
+- [x] T001 [P] Add `bigViewEnabled: boolean` field to `UserPreferences` interface in `src/types/settings.ts`
+- [x] T002 [P] Add `bigViewEnabled: false` to `DEFAULT_PREFERENCES` constant in `src/types/settings.ts`
+- [x] T003 [P] Update `validatePreferences` function in `src/types/settings.ts` to include bigViewEnabled with default value
 
 **Checkpoint**: Type system ready - all preferences include bigViewEnabled support
 
@@ -31,9 +31,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create `TimerDigit` component in `src/components/Timer/TimerDigit.tsx` with props interface (digit, position, isSeparator)
-- [ ] T005 Create `TimerDigit.css` in `src/components/Timer/TimerDigit.css` with digit animation styles (slide-in, transitions, prefers-reduced-motion)
-- [ ] T006 Add centiseconds calculation helper function `formatTime(ms, includeCentiseconds)` to `src/components/Timer/Timer.tsx` returning { minutes, seconds, centiseconds? }
+- [x] T004 Create `TimerDigit` component in `src/components/Timer/TimerDigit.tsx` with props interface (digit, position, isSeparator)
+- [x] T005 Create `TimerDigit.css` in `src/components/Timer/TimerDigit.css` with digit animation styles (slide-in, transitions, prefers-reduced-motion)
+- [x] T006 Add centiseconds calculation helper function `formatTime(ms, includeCentiseconds)` to `src/components/Timer/Timer.tsx` returning { minutes, seconds, centiseconds? }
 
 **Checkpoint**: Foundation ready - TimerDigit component and centiseconds formatting available for use
 
@@ -47,15 +47,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Add Big View toggle control to `SettingsPanel` in `src/components/Settings/SettingsPanel.tsx` under Appearance section using `ToggleSwitch` component
-- [ ] T008 [P] [US1] Update `App.tsx` to read `bigViewEnabled` from preferences and apply conditional className `app--big-view` to main app container in `src/components/App.tsx`
-- [ ] T009 [P] [US1] Add Big View layout CSS rules to `src/components/App.css` to hide header (`.app--big-view .app-header { display: none; }`)
-- [ ] T010 [P] [US1] Add timer container full-viewport styles to `src/components/App.css` (`.app--big-view .timer-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; }`)
-- [ ] T011 [US1] Pass `bigViewEnabled` prop from `App` to `Timer` component in `src/components/App.tsx`
-- [ ] T012 [US1] Update `Timer` component in `src/components/Timer/Timer.tsx` to accept `bigViewEnabled` prop and conditionally render centiseconds using `TimerDigit` components for MM:SS.CS format
-- [ ] T013 [US1] Add Big View timer styles to `src/components/Timer/Timer.css` with responsive font scaling (`.timer--big-view .timer-display { font-size: clamp(8rem, 25vmin, 40rem); }`)
-- [ ] T014 [US1] Update `useTimer` hook in `src/hooks/useTimer.ts` to accept `bigViewEnabled` parameter and use conditional interval timing (10ms for Big View, 100ms for regular)
-- [ ] T015 [US1] Update `App.tsx` to pass `preferences.bigViewEnabled` to `useTimer` hook instantiation in `src/components/App.tsx`
+- [x] T007 [P] [US1] Add Big View toggle control to `SettingsPanel` in `src/components/Settings/SettingsPanel.tsx` under Appearance section using `ToggleSwitch` component
+- [x] T008 [P] [US1] Update `App.tsx` to read `bigViewEnabled` from preferences and apply conditional className `app--big-view` to main app container in `src/components/App.tsx`
+- [x] T009 [P] [US1] Add Big View layout CSS rules to `src/components/App.css` to hide header (`.app--big-view .app-header { display: none; }`)
+- [x] T010 [P] [US1] Add timer container full-viewport styles to `src/components/App.css` (`.app--big-view .timer-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; }`)
+- [x] T011 [US1] Pass `bigViewEnabled` prop from `App` to `Timer` component in `src/components/App.tsx`
+- [x] T012 [US1] Update `Timer` component in `src/components/Timer/Timer.tsx` to accept `bigViewEnabled` prop and conditionally render centiseconds using `TimerDigit` components for MM:SS.CS format
+- [x] T013 [US1] Add Big View timer styles to `src/components/Timer/Timer.css` with responsive font scaling (`.timer--big-view .timer-display { font-size: clamp(8rem, 25vmin, 40rem); }`)
+- [x] T014 [US1] Update `useTimer` hook in `src/hooks/useTimer.ts` to accept `bigViewEnabled` parameter and use conditional interval timing (10ms for Big View, 100ms for regular)
+- [x] T015 [US1] Update `App.tsx` to pass `preferences.bigViewEnabled` to `useTimer` hook instantiation in `src/components/App.tsx`
 
 **Checkpoint**: Big View mode fully functional - toggle works, timer fills viewport with centiseconds, preference persists, layout hides header
 
@@ -69,10 +69,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Add controls container layout styles to `src/components/App.css` for Big View mode (`.app--big-view .controls-container { display: flex; justify-content: center; gap: var(--spacing-md); padding: var(--spacing-2xl); flex-wrap: wrap; }`)
-- [ ] T017 [US2] Extract Settings button to variable in `src/components/App.tsx` and conditionally render in header (regular mode) or controls container (Big View mode) based on `bigViewEnabled` state
-- [ ] T018 [US2] Update `Timer` component layout in `src/components/Timer/Timer.tsx` to ensure control buttons (Start/Pause, Reset, Skip) are rendered in controls container that appears below timer display
-- [ ] T019 [US2] Add mobile responsive styles to `src/components/App.css` for controls container in Big View mode (`@media (max-width: 640px) { .app--big-view .controls-container { flex-direction: column; } }`)
+- [x] T016 [P] [US2] Add controls container layout styles to `src/components/App.css` for Big View mode (`.app--big-view .controls-container { display: flex; justify-content: center; gap: var(--spacing-md); padding: var(--spacing-2xl); flex-wrap: wrap; }`)
+- [x] T017 [US2] Extract Settings button to variable in `src/components/App.tsx` and conditionally render in header (regular mode) or controls container (Big View mode) based on `bigViewEnabled` state
+- [x] T018 [US2] Update `Timer` component layout in `src/components/Timer/Timer.tsx` to ensure control buttons (Start/Pause, Reset, Skip) are rendered in controls container that appears below timer display
+- [x] T019 [US2] Add mobile responsive styles to `src/components/App.css` for controls container in Big View mode (`@media (max-width: 640px) { .app--big-view .controls-container { flex-direction: column; } }`)
 
 **Checkpoint**: Timer controls accessible and functional in Big View mode - Settings button in correct position, all buttons work, horizontal layout responsive
 
@@ -86,9 +86,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [P] [US3] Add session tracking layout styles to `src/components/App.css` for Big View mode (`.app--big-view .session-tracking { padding: var(--spacing-xl); }`)
-- [ ] T021 [P] [US3] Verify footer appears correctly below session tracking in `src/components/App.tsx` (no CSS changes needed, but validate scrollable order)
-- [ ] T022 [US3] Add vertical spacing styles to `src/components/App.css` to ensure proper separation between timer, controls, session tracking, and footer sections in Big View mode
+- [x] T020 [P] [US3] Add session tracking layout styles to `src/components/App.css` for Big View mode (`.app--big-view .session-tracking { padding: var(--spacing-xl); }`)
+- [x] T021 [P] [US3] Verify footer appears correctly below session tracking in `src/components/App.tsx` (no CSS changes needed, but validate scrollable order)
+- [x] T022 [US3] Add vertical spacing styles to `src/components/App.css` to ensure proper separation between timer, controls, session tracking, and footer sections in Big View mode
 
 **Checkpoint**: All UI elements accessible in correct order via scroll - timer at top, controls below, session info below controls, footer at bottom
 
@@ -98,14 +98,14 @@
 
 **Purpose**: Refinements and accessibility improvements that affect the entire feature
 
-- [ ] T023 [P] Add accessibility ARIA labels for Big View state changes in `src/components/App.tsx` (e.g., `aria-label="Big View mode ${bigViewEnabled ? 'enabled' : 'disabled'}"`)
-- [ ] T024 [P] Add screen reader announcement when toggling Big View mode in `src/components/Settings/SettingsPanel.tsx` using ARIA live regions
-- [ ] T025 [P] Verify `prefers-reduced-motion` media query support in `src/components/Timer/TimerDigit.css` to disable animations for accessibility
+- [x] T023 [P] Add accessibility ARIA labels for Big View state changes in `src/components/App.tsx` (e.g., `aria-label="Big View mode ${bigViewEnabled ? 'enabled' : 'disabled'}"`)
+- [x] T024 [P] Add screen reader announcement when toggling Big View mode in `src/components/Settings/SettingsPanel.tsx` using ARIA live regions
+- [x] T025 [P] Verify `prefers-reduced-motion` media query support in `src/components/Timer/TimerDigit.css` to disable animations for accessibility
 - [ ] T026 [P] Test timer display scaling across multiple viewport sizes (320px mobile to 4K desktop) and adjust clamp() values in `src/components/Timer/Timer.css` if needed
 - [ ] T027 [P] Verify keyboard navigation works correctly with Settings button in both positions (header and controls row) in `src/components/App.tsx`
 - [ ] T028 Performance profiling of 100Hz timer updates in Big View mode - verify no jank or excessive CPU usage using React DevTools Profiler
 - [ ] T029 Manual cross-browser testing (Chrome, Firefox, Safari, Edge) for Big View mode layout and animations
-- [ ] T030 [P] Add JSDoc comments to new `TimerDigit` component and updated functions in `src/components/Timer/TimerDigit.tsx` and `src/components/Timer/Timer.tsx`
+- [x] T030 [P] Add JSDoc comments to new `TimerDigit` component and updated functions in `src/components/Timer/TimerDigit.tsx` and `src/components/Timer/Timer.tsx`
 
 **Checkpoint**: Feature polished, accessible, performant, and tested across browsers
 

@@ -6,11 +6,24 @@
   text-align: center;
   user-select: none;
   transition: color var(--transition-base);
+  display: inline-flex; /* Ensure horizontal layout */
+  align-items: baseline;
+  justify-content: center;
 }
 
 @media (min-width: 768px) {
   .timer-display {
     font-size: 72px;
   }
+}
+
+/* Big View Mode overrides - use !important to override inline-flex */
+.app--big-view .timer-display {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  white-space: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 

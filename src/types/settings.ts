@@ -26,6 +26,9 @@ export interface UserPreferences {
 
   /** Enable notification sounds (visual banner always shows) */
   soundsEnabled: boolean;
+
+  /** Enable immersive Big View mode with full-screen timer */
+  bigViewEnabled: boolean;
 }
 
 /**
@@ -38,6 +41,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   autoStartBreaks: false,
   autoStartFocus: false,
   soundsEnabled: true,
+  bigViewEnabled: false,
 };
 
 /**
@@ -80,6 +84,7 @@ export const validatePreferences = (
     autoStartFocus:
       prefs.autoStartFocus ?? DEFAULT_PREFERENCES.autoStartFocus,
     soundsEnabled: prefs.soundsEnabled ?? DEFAULT_PREFERENCES.soundsEnabled,
+    bigViewEnabled: prefs.bigViewEnabled ?? DEFAULT_PREFERENCES.bigViewEnabled,
   };
 };
 

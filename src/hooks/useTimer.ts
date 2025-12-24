@@ -30,6 +30,11 @@ export function useTimer(
   preferences: UserPreferences,
   onComplete: (completedMode: TimerMode) => void
 ): UseTimerReturn {
+  // Calculate update interval based on Big View mode
+  // Big View: 10ms (100Hz) for centiseconds precision
+  // Regular: 100ms (10Hz) for standard display
+  const updateInterval = preferences.bigViewEnabled ? 10 : 100;
+
   // Load initial state from localStorage or use default
   const [session, setSession] = useState<TimerSession>(() => {
     const saved = getStorageItem<TimerSession>(
@@ -196,8 +201,8 @@ export function useTimer(
           remaining: newRemaining,
         };
       });
-    }, 100); // Update every 100ms for smooth countdown
-  }, [session.status, session.duration, session.remaining, onComplete]);
+    }, updateInterval); // Update interval based on Big View mode
+  }, [session.status, session.duration, session.remaining, onComplete, updateInterval]);
 
   // Pause timer
   const pause = useCallback(() => {
@@ -354,10 +359,10 @@ export function useTimer(
               remaining: newRemaining,
             };
           });
-        }, 100); // Update every 100ms for smooth countdown
+        }, updateInterval); // Update interval based on Big View mode
       }
     },
-    [preferences, onComplete]
+    [preferences, onComplete, updateInterval]
   );
 
   return {

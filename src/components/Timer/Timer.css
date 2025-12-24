@@ -47,3 +47,61 @@
   }
 }
 
+/* ============================================
+   Big View Mode Timer Styles
+   ============================================ */
+
+/* In Big View mode, timer fills viewport, display positioned statically */
+.app--big-view .timer-container {
+  max-width: none;
+  width: 100%;
+}
+
+/* Hide timer header (Focus Time label) in Big View */
+.app--big-view .timer-header {
+  display: none;
+}
+
+.app--big-view .timer-visual {
+  position: relative;
+  margin-bottom: var(--spacing-2xl);
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+/* Remove absolute positioning for Big View */
+.app--big-view .timer-display-overlay {
+  position: static;
+  transform: none;
+}
+
+/* Hide progress ring in Big View mode */
+.app--big-view .progress-ring-container svg,
+.app--big-view .progress-ring-container canvas {
+  display: none;
+}
+
+.app--big-view .timer-display {
+  /* Font size dynamically scales based on viewport width to fit all digits */
+  /* For MM:SS.CS format (8 characters), we use viewport width units */
+  font-size: clamp(4rem, 12vw, 20rem) !important;
+  font-weight: 700;
+  letter-spacing: -0.02em !important;
+  line-height: 1 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center;
+  white-space: nowrap !important;
+  width: 100%;
+  padding: var(--spacing-xl) 0;
+}
+
+/* Mobile responsive Big View font scaling */
+@media (max-width: 640px) {
+  .app--big-view .timer-display {
+    font-size: clamp(4rem, 15vw, 12rem) !important; /* Increased from 10vw for bigger mobile timer */
+    letter-spacing: -0.01em !important;
+  }
+}
+

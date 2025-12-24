@@ -158,8 +158,22 @@ export const App: React.FC = () => {
     timer.start();
   }, [timer]);
 
+  // Settings button component (reused in header or controls depending on Big View mode)
+  const settingsButton = (
+    <button
+      className="settings-button"
+      onClick={() => setSettingsOpen(true)}
+      aria-label="Open settings"
+    >
+      ⚙️
+    </button>
+  );
+
   return (
-    <div className="app">
+    <div 
+      className={`app ${preferences.bigViewEnabled ? 'app--big-view' : ''}`}
+      aria-label={`Pomodoro Timer - Big View mode ${preferences.bigViewEnabled ? 'enabled' : 'disabled'}`}
+    >
       <NotificationBanner
         visible={bannerVisible}
         completedMode={completedMode}
@@ -184,21 +198,17 @@ export const App: React.FC = () => {
                 <p className="app-subtitle">Focus. Work. Rest. Repeat.</p>
               </div>
             </div>
-            <button
-              className="settings-button"
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Open settings"
-            >
-              ⚙️
-            </button>
+            {!preferences.bigViewEnabled && settingsButton}
           </div>
         </header>
 
-        {/* Session tracking display */}
-        <div className="session-tracking">
-          <SessionCounter completedCount={completedCount} />
-          <CycleIndicator cyclePosition={cyclePosition} />
-        </div>
+        {/* Session tracking display - only show at top in regular mode */}
+        {!preferences.bigViewEnabled && (
+          <div className="session-tracking">
+            <SessionCounter completedCount={completedCount} />
+            <CycleIndicator cyclePosition={cyclePosition} />
+          </div>
+        )}
 
         {/* Persistent break start option - Bug 3 fix */}
         {timer.status === 'completed' && timer.mode === 'focus' && !preferences.autoStartBreaks && (
@@ -223,7 +233,17 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        <Timer {...timer} skip={handleSkip} />
+        <Timer {...timer} skip={handleSkip} bigViewEnabled={preferences.bigViewEnabled} settingsButton={preferences.bigViewEnabled ? settingsButton : undefined} />
+
+        {/* Session tracking display - show below timer in Big View mode */}
+        {preferences.bigViewEnabled && (
+          <div className="session-tracking">
+            <SessionCounter completedCount={completedCount} />
+            <CycleIndicator cyclePosition={cyclePosition} />
+          </div>
+        )}
+
+        {/* Controls container removed - now handled within Timer component */}
       </main>
 
       <footer className="app-footer">

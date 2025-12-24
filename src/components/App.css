@@ -49,25 +49,31 @@
 .header-content .settings-button {
   position: absolute;
   right: 0;
-  font-size: var(--font-size-2xl);
-  background: var(--color-surface);
-  border: 2px solid var(--color-border);
+  font-size: var(--font-size-lg); /* Reduced from 2xl */
+  background: transparent; /* Transparent background */
+  border: none; /* Remove border */
   border-radius: var(--radius-md);
-  width: 48px;
-  height: 48px;
+  width: 36px; /* Reduced from 48px */
+  height: 36px; /* Reduced from 48px */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
   flex-shrink: 0;
+  opacity: 0.7; /* Slightly transparent when not hovered */
 }
 
 .header-content .settings-button:hover {
-  background: var(--color-focus);
-  border-color: var(--color-focus);
+  background: var(--color-surface); /* Show background on hover */
+  opacity: 1;
   transform: rotate(90deg) scale(1.1);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm); /* Reduced shadow */
+}
+
+.header-content .settings-button:focus {
+  outline: none; /* Remove outline */
+  opacity: 1;
 }
 
 
@@ -241,6 +247,134 @@
   .btn-skip-break {
     width: 100%;
     min-width: unset;
+  }
+}
+
+/* ============================================
+   Big View Mode Styles
+   ============================================ */
+
+/* Hide header in Big View mode */
+.app--big-view .app-header {
+  display: none;
+}
+
+/* Timer container fills full viewport height */
+.app--big-view .timer-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* Remove padding to fill entire screen */
+}
+
+/* Controls container layout in Big View mode */
+.app--big-view .controls-container {
+  position: relative;
+  display: flex;
+  justify-content: flex-start; /* Changed from center to allow left alignment */
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
+  width: 100%;
+}
+
+/* Settings button in Big View - fixed to left edge */
+.app--big-view .controls-container .settings-button {
+  position: absolute;
+  left: var(--spacing-2xl);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--font-size-lg); /* Reduced from 2xl */
+  background: transparent; /* Transparent background */
+  border: none; /* Remove border */
+  border-radius: var(--radius-md);
+  width: 36px; /* Reduced from 48px */
+  height: 36px; /* Reduced from 48px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+  opacity: 0.7; /* Slightly transparent when not hovered */
+}
+
+.app--big-view .controls-container .settings-button:hover {
+  background: var(--color-surface); /* Show background on hover */
+  opacity: 1;
+  transform: translateY(-50%) rotate(90deg) scale(1.1);
+  box-shadow: var(--shadow-sm); /* Reduced shadow */
+}
+
+.app--big-view .controls-container .settings-button:focus {
+  outline: none; /* Remove outline */
+  opacity: 1;
+}
+
+/* Timer controls in Big View - positioned to align primary button under seconds (center) */
+.app--big-view .timer-controls {
+  /* Shift controls to align primary button center under the "SS" (seconds) digits center */
+  /* Seconds are at viewport center (~50vw), button is 184px wide */
+  /* Center button at 50% viewport = center of screen and center of seconds */
+  margin-left: calc(50vw - 148px); /* Adjusted: 92px + 56px offset correction */
+  margin-right: auto;
+}
+
+/* Session tracking layout in Big View mode - below timer */
+.app--big-view .session-tracking {
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: var(--spacing-2xl);
+  width: 100%;
+}
+
+/* Ensure proper vertical spacing in Big View mode */
+.app--big-view .app-main {
+  justify-content: flex-start;
+  padding: 0;
+}
+
+/* Mobile responsive adjustments for Big View */
+@media (max-width: 640px) {
+  .app--big-view .controls-container {
+    flex-direction: column; /* Stack vertically on mobile */
+    align-items: center;
+    justify-content: center; /* Center controls */
+    padding: var(--spacing-md) var(--spacing-sm);
+    width: 100%;
+  }
+  
+  .app--big-view .controls-container .settings-button {
+    position: relative; /* Change from absolute */
+    left: auto; /* Reset positioning */
+    top: auto;
+    transform: none;
+    margin-bottom: var(--spacing-sm); /* Add space below */
+  }
+  
+  .app--big-view .timer-controls {
+    /* Center controls on mobile */
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .app--big-view .session-tracking {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+  
+  /* Reduce timer container padding on mobile */
+  .app--big-view .timer-container {
+    padding: var(--spacing-md) 0;
   }
 }
 
