@@ -9,6 +9,7 @@ import {
 } from '../types/theme';
 
 // Create context with undefined default (requires provider)
+// eslint-disable-next-line react-refresh/only-export-components
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 interface ThemeProviderProps {
@@ -20,6 +21,26 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME);
   const [isUserPreference, setIsUserPreference] = useState(false);
   const [systemPreference, setSystemPreference] = useState<ThemeMode | null>(null);
+
+  // Helper functions (defined before useEffects that use them)
+  // Apply theme to DOM
+  const applyThemeToDOM = useCallback((mode: ThemeMode) => {
+    document.documentElement.setAttribute('data-theme', mode);
+  }, []);
+
+  // Save to localStorage
+  const saveThemePreference = useCallback((mode: ThemeMode, source: ThemePreference['source']) => {
+    try {
+      const preference: ThemePreference = {
+        mode,
+        updatedAt: new Date().toISOString(),
+        source,
+      };
+      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(preference));
+    } catch (error) {
+      console.warn('Failed to save theme preference:', error);
+    }
+  }, []);
 
   // Detect system preference
   useEffect(() => {
@@ -67,7 +88,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (systemPreference !== null) {
       loadTheme();
     }
-  }, [systemPreference]); // applyThemeToDOM and saveThemePreference are stable (useCallback)
+  }, [systemPreference, applyThemeToDOM, saveThemePreference]);
 
   // Apply system preference changes (only if no user preference)
   useEffect(() => {
@@ -76,26 +97,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       applyThemeToDOM(systemPreference);
       saveThemePreference(systemPreference, 'system');
     }
-  }, [systemPreference, isUserPreference]); // applyThemeToDOM and saveThemePreference are stable (useCallback)
-
-  // Apply theme to DOM
-  const applyThemeToDOM = useCallback((mode: ThemeMode) => {
-    document.documentElement.setAttribute('data-theme', mode);
-  }, []);
-
-  // Save to localStorage
-  const saveThemePreference = useCallback((mode: ThemeMode, source: ThemePreference['source']) => {
-    try {
-      const preference: ThemePreference = {
-        mode,
-        updatedAt: new Date().toISOString(),
-        source,
-      };
-      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(preference));
-    } catch (error) {
-      console.warn('Failed to save theme preference:', error);
-    }
-  }, []);
+  }, [systemPreference, isUserPreference, applyThemeToDOM, saveThemePreference]);
 
   // Public API: setTheme
   const setTheme = useCallback((mode: ThemeMode) => {
