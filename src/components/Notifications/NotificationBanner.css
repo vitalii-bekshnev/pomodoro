@@ -53,8 +53,8 @@
 }
 
 .banner-button.primary:hover {
-  background-color: #229954;
-  border-color: #229954;
+  background-color: var(--color-accent-green-dark);
+  border-color: var(--color-accent-green-dark);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }

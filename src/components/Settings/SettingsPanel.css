@@ -128,8 +128,8 @@
 }
 
 .settings-footer .settings-button.primary:hover {
-  background-color: #d35400;
-  border-color: #d35400;
+  background-color: var(--color-accent-orange-dark);
+  border-color: var(--color-accent-orange-dark);
   transform: translateY(-1px) !important;
   box-shadow: var(--shadow-sm);
 }
