@@ -26,6 +26,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 }) => {
   // Local state for editing (only save on "Save" button)
   const [localPrefs, setLocalPrefs] = useState<UserPreferences>(preferences);
+  
+  // Screen reader announcement for Big View toggle
+  const [announcement, setAnnouncement] = useState<string>('');
 
   // Update local state when preferences prop changes
   useEffect(() => {
@@ -51,6 +54,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   }, [isOpen, handleCancel]);
 
   const handleSave = () => {
+    // Announce Big View mode change if it was toggled
+    if (localPrefs.bigViewEnabled !== preferences.bigViewEnabled) {
+      const message = localPrefs.bigViewEnabled 
+        ? 'Big View mode enabled - Timer will fill the screen'
+        : 'Big View mode disabled - Standard layout restored';
+      setAnnouncement(message);
+      // Clear announcement after it's been read
+      setTimeout(() => setAnnouncement(''), 3000);
+    }
+    
     onSave(localPrefs);
     onClose();
   };
@@ -75,6 +88,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   return (
     <>
+      {/* Screen reader announcements */}
+      <div 
+        role="status" 
+        aria-live="polite" 
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+      
       {/* Backdrop */}
       <div className="settings-backdrop" onClick={handleCancel} />
 
@@ -191,6 +214,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <h3 className="section-title">Appearance</h3>
             
             <ThemeToggle />
+
+            <ToggleSwitch
+              label="Big View Mode"
+              checked={localPrefs.bigViewEnabled}
+              onChange={(checked) =>
+                setLocalPrefs({ ...localPrefs, bigViewEnabled: checked })
+              }
+              description="Immersive full-screen timer with centiseconds precision"
+            />
           </section>
         </div>
 

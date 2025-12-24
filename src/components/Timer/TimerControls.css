@@ -60,3 +60,22 @@
   cursor: not-allowed;
 }
 
+/* Mobile responsive styles for Big View mode */
+@media (max-width: 640px) {
+  .app--big-view .control-button.primary {
+    min-width: 120px; /* Reduced from 160px */
+    padding: var(--spacing-md) var(--spacing-lg); /* Reduced from lg/2xl */
+    font-size: var(--font-size-md); /* Reduced from xl */
+  }
+  
+  .app--big-view .control-button.secondary {
+    font-size: var(--font-size-xs); /* Reduced from sm */
+    padding: var(--spacing-xs) var(--spacing-sm); /* Reduced */
+  }
+  
+  .app--big-view .timer-controls {
+    margin-top: var(--spacing-md); /* Reduced spacing */
+    gap: var(--spacing-sm); /* Reduced gap */
+  }
+}
+

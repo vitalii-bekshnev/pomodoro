@@ -1,13 +1,9 @@
 /**
- * User preferences type definitions
+ * UserPreferences Contract
+ * 
+ * Extended type definition for user preferences including Big View mode
  */
 
-/**
- * User preference settings
- *
- * All durations stored in minutes (not milliseconds) for user-friendliness
- * in settings UI. Converted to milliseconds for timer operations.
- */
 export interface UserPreferences {
   /** Focus session duration in minutes (5-60) */
   focusDuration: number;
@@ -27,7 +23,18 @@ export interface UserPreferences {
   /** Enable notification sounds (visual banner always shows) */
   soundsEnabled: boolean;
 
-  /** Enable immersive Big View mode with full-screen timer */
+  /** 
+   * Enable immersive Big View mode
+   * 
+   * When enabled:
+   * - Timer fills 90-95% of viewport with large font
+   * - Timer displays centiseconds (MM:SS.CS format)
+   * - Header is hidden
+   * - Controls arranged in horizontal row below timer (accessible via scroll)
+   * - Session info and footer below controls (accessible via scroll)
+   * - Settings button moved to control row (left-most position)
+   * - Smooth digit transition animations
+   */
   bigViewEnabled: boolean;
 }
 
@@ -41,7 +48,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   autoStartBreaks: false,
   autoStartFocus: false,
   soundsEnabled: true,
-  bigViewEnabled: false,
+  bigViewEnabled: false, // Defaults to disabled for non-intrusive first experience
 };
 
 /**
@@ -55,6 +62,15 @@ export const DURATION_CONSTRAINTS = {
 
 /**
  * Validate and clamp user preferences to valid ranges
+ * 
+ * @param prefs - Partial preferences object (e.g., from localStorage)
+ * @returns Validated preferences with defaults for missing fields
+ * 
+ * @example
+ * // Backward compatibility - existing user without bigViewEnabled
+ * const saved = { focusDuration: 30, soundsEnabled: false };
+ * const validated = validatePreferences(saved);
+ * // validated.bigViewEnabled === false (from DEFAULT_PREFERENCES)
  */
 export const validatePreferences = (
   prefs: Partial<UserPreferences>
@@ -79,10 +95,8 @@ export const validatePreferences = (
       DURATION_CONSTRAINTS.longBreak.min,
       DURATION_CONSTRAINTS.longBreak.max
     ),
-    autoStartBreaks:
-      prefs.autoStartBreaks ?? DEFAULT_PREFERENCES.autoStartBreaks,
-    autoStartFocus:
-      prefs.autoStartFocus ?? DEFAULT_PREFERENCES.autoStartFocus,
+    autoStartBreaks: prefs.autoStartBreaks ?? DEFAULT_PREFERENCES.autoStartBreaks,
+    autoStartFocus: prefs.autoStartFocus ?? DEFAULT_PREFERENCES.autoStartFocus,
     soundsEnabled: prefs.soundsEnabled ?? DEFAULT_PREFERENCES.soundsEnabled,
     bigViewEnabled: prefs.bigViewEnabled ?? DEFAULT_PREFERENCES.bigViewEnabled,
   };
